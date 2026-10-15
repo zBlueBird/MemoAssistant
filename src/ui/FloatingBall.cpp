@@ -18,7 +18,7 @@ FloatingBall::FloatingBall(QWidget *parent)
     setObjectName(QStringLiteral("floatingBall"));
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
-    setFixedSize(58, 58);
+    setFixedSize(68, 68);
     setToolTip(tr("点击查看备忘录，拖动可改变位置"));
     setCursor(Qt::PointingHandCursor);
 
@@ -101,55 +101,70 @@ void FloatingBall::paintEvent(QPaintEvent *)
                                 : 0.8;
 
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(28, 41, 61, 38));
-    painter.drawEllipse(QRectF(13, 46, 34, 6));
+    painter.setBrush(QColor(28, 41, 61, 35));
+    painter.drawEllipse(QRectF(15, 56, 40, 6));
 
     painter.save();
     painter.translate(0, bob);
 
-    painter.setPen(QPen(QColor(QStringLiteral("#D5E8FF")), 1.2));
-    painter.setBrush(QColor(235, 246, 255, 220));
+    // Large translucent wings make the silhouette immediately recognizable.
+    painter.setPen(QPen(QColor(QStringLiteral("#B8DDF5")), 1.4));
+    painter.setBrush(QColor(225, 244, 255, 235));
     painter.save();
-    painter.translate(25, 25);
-    painter.rotate(-22 - wingPulse * 12);
-    painter.drawEllipse(QRectF(-12, -11, 17, 11));
+    painter.translate(26, 30);
+    painter.rotate(-27 - wingPulse * 13);
+    painter.drawEllipse(QRectF(-17, -13, 23, 15));
     painter.restore();
     painter.save();
-    painter.translate(34, 25);
-    painter.rotate(22 + wingPulse * 12);
-    painter.drawEllipse(QRectF(-5, -11, 17, 11));
+    painter.translate(42, 30);
+    painter.rotate(27 + wingPulse * 13);
+    painter.drawEllipse(QRectF(-6, -13, 23, 15));
     painter.restore();
 
-    painter.setPen(QPen(QColor(QStringLiteral("#513A17")), 1.6, Qt::SolidLine, Qt::RoundCap));
-    painter.drawArc(QRectF(20, 12, 12, 13), 70 * 16, 70 * 16);
-    painter.drawArc(QRectF(27, 12, 12, 13), 40 * 16, 70 * 16);
+    // Head, antennae and eyes separate the face from the striped abdomen.
+    painter.setPen(QPen(QColor(QStringLiteral("#3C2A17")), 1.8, Qt::SolidLine, Qt::RoundCap));
+    painter.drawLine(QPointF(28, 20), QPointF(23, 13));
+    painter.drawLine(QPointF(40, 20), QPointF(45, 13));
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(QStringLiteral("#FFD54F")));
-    painter.drawEllipse(QRectF(18, 21, 26, 25));
+    painter.setBrush(QColor(QStringLiteral("#3C2A17")));
+    painter.drawEllipse(QRectF(21, 10.5, 4.5, 4.5));
+    painter.drawEllipse(QRectF(42.5, 10.5, 4.5, 4.5));
+
+    painter.setBrush(QColor(QStringLiteral("#4B351D")));
+    painter.drawEllipse(QRectF(24, 17, 20, 19));
+    painter.setBrush(QColor(QStringLiteral("#FFD65A")));
+    painter.drawEllipse(QRectF(28, 19, 12, 11));
+    painter.setBrush(QColor(QStringLiteral("#23180F")));
+    painter.drawEllipse(QRectF(29.5, 22, 2.7, 3.2));
+    painter.drawEllipse(QRectF(35.8, 22, 2.7, 3.2));
+    painter.setPen(QPen(QColor(QStringLiteral("#3C2A17")), 1.2, Qt::SolidLine, Qt::RoundCap));
+    painter.drawArc(QRectF(31, 24, 6, 5), 200 * 16, 140 * 16);
+
+    // Teardrop abdomen with horizontal bee stripes and a visible stinger.
+    QPainterPath abdomen;
+    abdomen.moveTo(22, 31);
+    abdomen.cubicTo(22, 25, 46, 25, 46, 32);
+    abdomen.cubicTo(46, 47, 39, 56, 34, 59);
+    abdomen.cubicTo(29, 56, 22, 47, 22, 31);
+    abdomen.closeSubpath();
+    painter.setPen(QPen(QColor(QStringLiteral("#4B351D")), 1.2));
+    painter.setBrush(QColor(QStringLiteral("#FFD54A")));
+    painter.drawPath(abdomen);
 
     painter.save();
-    painter.setClipPath([] {
-        QPainterPath path;
-        path.addEllipse(QRectF(18, 21, 26, 25));
-        return path;
-    }());
-    painter.setBrush(QColor(QStringLiteral("#4A3520")));
-    painter.drawRect(QRectF(23, 20, 5, 28));
-    painter.drawRect(QRectF(34, 20, 5, 28));
+    painter.setClipPath(abdomen);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(QStringLiteral("#4B351D")));
+    painter.drawRect(QRectF(20, 34, 28, 5));
+    painter.drawRect(QRectF(20, 45, 28, 5));
     painter.restore();
 
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(QStringLiteral("#3B2B1A")));
-    painter.drawEllipse(QRectF(25, 28, 2.8, 3.4));
-    painter.drawEllipse(QRectF(34.2, 28, 2.8, 3.4));
-    painter.setPen(QPen(QColor(QStringLiteral("#3B2B1A")), 1.4, Qt::SolidLine, Qt::RoundCap));
-    painter.drawArc(QRectF(27.5, 31, 7, 6), 200 * 16, 140 * 16);
-
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(QStringLiteral("#4A3520")));
+    painter.setBrush(QColor(QStringLiteral("#3C2A17")));
     QPolygonF sting;
-    sting << QPointF(44, 33) << QPointF(49, 35.5) << QPointF(44, 38);
+    sting << QPointF(31, 57) << QPointF(34, 65) << QPointF(37, 57);
     painter.drawPolygon(sting);
+
     painter.restore();
 
     if (m_incompleteCount <= 0) {
@@ -159,7 +174,7 @@ void FloatingBall::paintEvent(QPaintEvent *)
     const QString badgeText = m_incompleteCount > 99 ? QStringLiteral("99+")
                                                       : QString::number(m_incompleteCount);
     const qreal badgeWidth = m_incompleteCount > 99 ? 24.0 : m_incompleteCount > 9 ? 20.0 : 17.0;
-    const QRectF badgeRect(width() - badgeWidth - 2.0, 2.0, badgeWidth, 17.0);
+    const QRectF badgeRect(width() - badgeWidth - 3.0, 2.0, badgeWidth, 17.0);
     painter.setPen(QPen(Qt::white, 1.5));
     painter.setBrush(QColor(QStringLiteral("#E5484D")));
     painter.drawRoundedRect(badgeRect, 8.5, 8.5);
