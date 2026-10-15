@@ -515,25 +515,58 @@ void MemoApplication::applyStyleSheet()
             border: 1px solid #E0E6EF;
             border-radius: 10px;
         }
-        QToolButton#weekDayButton {
+        QWidget#weekDayCard {
             background: #FFFFFF;
-            color: #536177;
-            border: 1px solid #DDE4EE;
-            border-radius: 9px;
-            padding: 8px 2px;
-            font-size: 12px;
+            border: 1px solid #E0E6EF;
+            border-radius: 12px;
         }
-        QToolButton#weekDayButton[hasTasks="true"] {
-            background: #F1F5FF;
-            border-color: #B8C9F6;
-            color: #315FD6;
+        QWidget#weekDayCard[hovered="true"] {
+            background: #F8FAFF;
+            border-color: #9CB2EE;
+        }
+        QWidget#weekDayCard[today="true"] {
+            background: #F5F8FF;
+            border: 2px solid #AFC2F5;
+        }
+        QWidget#weekDayCard[selected="true"] {
+            background: #4F7CFF;
+            border: 2px solid #4F7CFF;
+        }
+        QLabel#weekCardWeekday {
+            color: #7A8799;
+            font-size: 11px;
             font-weight: 600;
         }
-        QToolButton#weekDayButton:hover { border-color: #7899ED; }
-        QToolButton#weekDayButton:checked {
-            background: #4F7CFF;
-            border-color: #4F7CFF;
+        QLabel#weekCardDay {
+            color: #24344D;
+            font-size: 25px;
+            font-weight: 700;
+        }
+        QLabel#weekCardMonth {
+            color: #8995A5;
+            font-size: 10px;
+        }
+        QLabel#weekCardCount {
+            min-width: 48px;
+            padding: 3px 6px;
+            color: #8995A5;
+            background: #F0F3F7;
+            border-radius: 9px;
+            font-size: 11px;
+        }
+        QLabel#weekCardCount[hasTasks="true"] {
+            color: #315FD6;
+            background: #E6EDFF;
+            font-weight: 700;
+        }
+        QWidget#weekDayCard[selected="true"] QLabel#weekCardWeekday,
+        QWidget#weekDayCard[selected="true"] QLabel#weekCardDay,
+        QWidget#weekDayCard[selected="true"] QLabel#weekCardMonth {
             color: #FFFFFF;
+        }
+        QWidget#weekDayCard[selected="true"] QLabel#weekCardCount {
+            color: #315FD6;
+            background: #FFFFFF;
         }
         QLabel#emptyLabel {
             color: #8995A5;

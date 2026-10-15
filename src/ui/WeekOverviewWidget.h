@@ -5,7 +5,7 @@
 #include <QMap>
 #include <QWidget>
 
-class QToolButton;
+class WeekDayCard;
 
 class WeekOverviewWidget : public QWidget
 {
@@ -19,6 +19,6 @@ signals:
     void dateSelected(const QDate &date);
 
 private:
-    QList<QToolButton *> m_dayButtons;
+    QList<WeekDayCard *> m_dayCards;
     QList<QDate> m_dates;
 };

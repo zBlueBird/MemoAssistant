@@ -47,6 +47,8 @@ qt_add_executable(MemoAssistant WIN32
     src/ui/TaskCalendarWidget.cpp
     src/ui/WeekOverviewWidget.h
     src/ui/WeekOverviewWidget.cpp
+    src/ui/WeekDayCard.h
+    src/ui/WeekDayCard.cpp
     src/ui/DeleteConfirmDialog.h
     src/ui/DeleteConfirmDialog.cpp
     src/ui/ReminderDialog.h
