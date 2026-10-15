@@ -45,6 +45,8 @@ qt_add_executable(MemoAssistant WIN32
     src/ui/MemoPanel.cpp
     src/ui/DeleteConfirmDialog.h
     src/ui/DeleteConfirmDialog.cpp
+    src/ui/ReminderDialog.h
+    src/ui/ReminderDialog.cpp
     src/ui/MemoEditorDialog.h
     src/ui/MemoEditorDialog.cpp
     src/ui/MemoItemWidget.h

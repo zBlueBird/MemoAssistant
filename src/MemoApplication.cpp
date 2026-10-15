@@ -8,6 +8,7 @@
 #include "ui/FloatingBall.h"
 #include "ui/IconFactory.h"
 #include "ui/MemoPanel.h"
+#include "ui/ReminderDialog.h"
 
 #include <QAction>
 #include <QApplication>
@@ -156,8 +157,8 @@ void MemoApplication::showContextMenu(const QPoint &globalPosition)
 void MemoApplication::quitApplication()
 {
     m_settings->setFloatingBallPosition(m_floatingBall->pos());
-    if (m_reminderMessageBox) {
-        m_reminderMessageBox->close();
+    if (m_reminderDialog) {
+        m_reminderDialog->close();
     }
     m_trayIcon->hide();
     QApplication::quit();
@@ -183,34 +184,44 @@ void MemoApplication::positionPanel()
     m_panel->move(x, y);
 }
 
+void MemoApplication::positionReminder()
+{
+    QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
+    if (!screen) {
+        screen = QGuiApplication::primaryScreen();
+    }
+    const QRect available = screen->availableGeometry();
+    const QPoint centeredPosition(available.center().x() - m_reminderDialog->width() / 2,
+                                  available.center().y() - m_reminderDialog->height() / 2);
+    m_reminderDialog->move(centeredPosition);
+}
+
 void MemoApplication::showReminder(const QString &message)
 {
     m_collapseTimer.stop();
     m_floatingBall->raise();
 
-    if (m_reminderMessageBox) {
-        m_reminderMessageBox->setText(message);
-        m_reminderMessageBox->show();
-        m_reminderMessageBox->raise();
-        QApplication::alert(m_reminderMessageBox, 8'000);
+    if (m_reminderDialog) {
+        m_reminderDialog->setMessage(message);
+        m_reminderDialog->show();
+        positionReminder();
+        m_reminderDialog->raise();
+        m_reminderDialog->activateWindow();
+        QApplication::alert(m_reminderDialog, 8'000);
         return;
     }
 
-    m_reminderMessageBox = new QMessageBox(QMessageBox::Information,
-                                           tr("备忘录提醒"),
-                                           message,
-                                           QMessageBox::Ok,
-                                           nullptr,
-                                           Qt::Tool | Qt::WindowStaysOnTopHint);
-    m_reminderMessageBox->setAttribute(Qt::WA_DeleteOnClose);
-    m_reminderMessageBox->setWindowModality(Qt::NonModal);
-    connect(m_reminderMessageBox, &QObject::destroyed, this, [this] {
-        m_reminderMessageBox = nullptr;
+    m_reminderDialog = new ReminderDialog;
+    m_reminderDialog->setMessage(message);
+    m_reminderDialog->setAttribute(Qt::WA_DeleteOnClose);
+    connect(m_reminderDialog, &QObject::destroyed, this, [this] {
+        m_reminderDialog = nullptr;
     });
-    m_reminderMessageBox->show();
-    m_reminderMessageBox->raise();
-    m_reminderMessageBox->activateWindow();
-    QApplication::alert(m_reminderMessageBox, 8'000);
+    m_reminderDialog->show();
+    positionReminder();
+    m_reminderDialog->raise();
+    m_reminderDialog->activateWindow();
+    QApplication::alert(m_reminderDialog, 8'000);
 }
 
 void MemoApplication::createTrayMenu()
@@ -407,6 +418,39 @@ void MemoApplication::applyStyleSheet()
             border-color: #D63E43;
         }
         QPushButton#deleteConfirmButton:pressed { background: #C9363B; }
+        QDialog#reminderDialog { background: transparent; }
+        QFrame#reminderDialogSurface {
+            background: #FFFFFF;
+            border: 1px solid #D7E0EC;
+            border-radius: 14px;
+        }
+        QLabel#reminderDialogIcon {
+            background: #EEF3FF;
+            border: 1px solid #D8E3FF;
+            border-radius: 21px;
+        }
+        QLabel#reminderDialogTitle {
+            color: #1F2B3D;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        QLabel#reminderDialogMessage {
+            color: #344258;
+            font-size: 14px;
+        }
+        QPushButton#reminderDialogConfirmButton {
+            background: #4F7CFF;
+            color: #FFFFFF;
+            border: 1px solid #4F7CFF;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        QPushButton#reminderDialogConfirmButton:hover {
+            background: #3F6EE8;
+            border-color: #3F6EE8;
+        }
+        QPushButton#reminderDialogConfirmButton:pressed { background: #315FD6; }
         QWidget#panelSurface {
             background: #F8FAFE;
             border: 1px solid #DEE5F1;

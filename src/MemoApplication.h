@@ -8,11 +8,11 @@ class DatabaseManager;
 class FloatingBall;
 class MemoPanel;
 class MemoRepository;
+class ReminderDialog;
 class ReminderService;
 class SettingsService;
 class SingleInstanceGuard;
 class QMenu;
-class QMessageBox;
 class QSystemTrayIcon;
 
 class MemoApplication : public QObject
@@ -35,6 +35,7 @@ private slots:
 
 private:
     void positionPanel();
+    void positionReminder();
     void createTrayMenu();
     void showReminder(const QString &message);
     void applyStyleSheet();
@@ -48,7 +49,7 @@ private:
     MemoPanel *m_panel = nullptr;
     QSystemTrayIcon *m_trayIcon = nullptr;
     QMenu *m_trayMenu = nullptr;
-    QMessageBox *m_reminderMessageBox = nullptr;
+    ReminderDialog *m_reminderDialog = nullptr;
     std::unique_ptr<ReminderService> m_reminderService;
     QTimer m_collapseTimer;
 };
