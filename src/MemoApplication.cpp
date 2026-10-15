@@ -597,6 +597,68 @@ void MemoApplication::applyStyleSheet()
             border-color: #AFC2F5;
             background: #FCFDFF;
         }
+        QDialog#memoDetailsDialog { background: transparent; }
+        QFrame#detailsSurface {
+            background: #F8FAFE;
+            border: 1px solid #CFD9E8;
+            border-radius: 13px;
+        }
+        QLabel#detailsHeading {
+            color: #1E2A3B;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        QPushButton#detailsCloseButton {
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #647287;
+            font-size: 22px;
+        }
+        QPushButton#detailsCloseButton:hover { background: #E7ECF4; }
+        QLabel#detailsTitle {
+            color: #1F2B3D;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        QLabel#detailsStatus {
+            color: #926A18;
+            background: #FFF5D6;
+            border: 1px solid #F0D584;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        QLabel#detailsStatus[completed="true"] {
+            color: #2E7851;
+            background: #E1F5EA;
+            border-color: #A8DCC0;
+        }
+        QTextBrowser#detailsContent {
+            margin: 8px 20px;
+            padding: 10px;
+            color: #344258;
+            background: #FFFFFF;
+            border: 1px solid #E0E6EF;
+            border-radius: 8px;
+        }
+        QLabel#detailsFieldName {
+            color: #7A8799;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        QLabel#detailsFieldValue {
+            color: #344258;
+            font-size: 12px;
+        }
+        QPushButton#detailsConfirmButton {
+            color: #FFFFFF;
+            background: #4F7CFF;
+            border: 1px solid #4F7CFF;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        QPushButton#detailsConfirmButton:hover { background: #3F6EE8; }
         QLabel#memoTitleLabel {
             color: #1F2B3D;
             font-size: 13px;

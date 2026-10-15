@@ -5,6 +5,7 @@
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMouseEvent>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -16,6 +17,7 @@ MemoItemWidget::MemoItemWidget(const Memo &memo, QWidget *parent)
 {
     setObjectName(QStringLiteral("memoItem"));
     setAttribute(Qt::WA_StyledBackground, true);
+    setToolTip(tr("双击查看详情"));
 
     m_completedCheck->setChecked(memo.completed);
     m_completedCheck->setToolTip(tr("标记为完成"));
@@ -70,4 +72,14 @@ MemoItemWidget::MemoItemWidget(const Memo &memo, QWidget *parent)
     });
     connect(editButton, &QPushButton::clicked, this, [this] { emit editRequested(m_memo.id); });
     connect(deleteButton, &QPushButton::clicked, this, [this] { emit deleteRequested(m_memo.id); });
+}
+
+void MemoItemWidget::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        emit detailsRequested(m_memo.id);
+        event->accept();
+        return;
+    }
+    QWidget::mouseDoubleClickEvent(event);
 }

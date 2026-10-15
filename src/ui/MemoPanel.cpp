@@ -3,6 +3,7 @@
 #include "data/MemoRepository.h"
 #include "ui/DeleteConfirmDialog.h"
 #include "ui/IconFactory.h"
+#include "ui/MemoDetailsDialog.h"
 #include "ui/MemoEditorDialog.h"
 #include "ui/MemoItemWidget.h"
 #include "ui/TaskCalendarWidget.h"
@@ -195,6 +196,8 @@ void MemoPanel::refresh()
         auto *item = new MemoItemWidget(memo, m_listContainer);
         connect(item, &MemoItemWidget::completionChanged,
                 this, &MemoPanel::setMemoCompleted);
+        connect(item, &MemoItemWidget::detailsRequested,
+                this, &MemoPanel::showMemoDetails);
         connect(item, &MemoItemWidget::editRequested,
                 this, &MemoPanel::editMemo);
         connect(item, &MemoItemWidget::deleteRequested,
@@ -303,6 +306,17 @@ void MemoPanel::addMemo()
     m_selectedDate = memo.scheduledDate;
     setViewMode(ViewMode::Day);
     emit memoChanged();
+}
+
+void MemoPanel::showMemoDetails(qint64 id)
+{
+    const std::optional<Memo> memo = m_repository->findById(id);
+    if (!memo) {
+        showError(tr("读取备忘录"));
+        return;
+    }
+    MemoDetailsDialog details(*memo, this);
+    details.exec();
 }
 
 void MemoPanel::editMemo(qint64 id)

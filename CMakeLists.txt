@@ -57,6 +57,8 @@ qt_add_executable(MemoAssistant WIN32
     src/ui/MemoEditorDialog.cpp
     src/ui/MemoItemWidget.h
     src/ui/MemoItemWidget.cpp
+    src/ui/MemoDetailsDialog.h
+    src/ui/MemoDetailsDialog.cpp
 )
 target_include_directories(MemoAssistant PRIVATE src)
 target_link_libraries(MemoAssistant PRIVATE

@@ -41,6 +41,7 @@ private slots:
     void setMonthView();
     void selectCalendarDate(const QDate &date);
     void addMemo();
+    void showMemoDetails(qint64 id);
     void editMemo(qint64 id);
     void deleteMemo(qint64 id);
     void setMemoCompleted(qint64 id, bool completed);
