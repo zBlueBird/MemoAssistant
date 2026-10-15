@@ -99,14 +99,7 @@ bool MemoApplication::initialize()
     connect(m_reminderService.get(), &ReminderService::reminderDue,
             this, [this](const QString &message) {
                 m_panel->refresh();
-                if (!QSystemTrayIcon::isSystemTrayAvailable() || !m_trayIcon->isVisible()) {
-                    m_collapseTimer.stop();
-                    positionPanel();
-                    m_panel->show();
-                    m_panel->raise();
-                    m_floatingBall->raise();
-                    QMessageBox::information(m_panel, tr("备忘录提醒"), message);
-                }
+                showReminder(message);
             }, Qt::QueuedConnection);
 
     m_floatingBall->moveToVisiblePosition(m_settings->floatingBallPosition());
@@ -163,6 +156,9 @@ void MemoApplication::showContextMenu(const QPoint &globalPosition)
 void MemoApplication::quitApplication()
 {
     m_settings->setFloatingBallPosition(m_floatingBall->pos());
+    if (m_reminderMessageBox) {
+        m_reminderMessageBox->close();
+    }
     m_trayIcon->hide();
     QApplication::quit();
 }
@@ -185,6 +181,36 @@ void MemoApplication::positionPanel()
     int y = m_floatingBall->y() + m_floatingBall->height() / 2 - m_panel->height() / 2;
     y = qBound(available.top(), y, available.bottom() - m_panel->height() + 1);
     m_panel->move(x, y);
+}
+
+void MemoApplication::showReminder(const QString &message)
+{
+    m_collapseTimer.stop();
+    m_floatingBall->raise();
+
+    if (m_reminderMessageBox) {
+        m_reminderMessageBox->setText(message);
+        m_reminderMessageBox->show();
+        m_reminderMessageBox->raise();
+        QApplication::alert(m_reminderMessageBox, 8'000);
+        return;
+    }
+
+    m_reminderMessageBox = new QMessageBox(QMessageBox::Information,
+                                           tr("备忘录提醒"),
+                                           message,
+                                           QMessageBox::Ok,
+                                           nullptr,
+                                           Qt::Tool | Qt::WindowStaysOnTopHint);
+    m_reminderMessageBox->setAttribute(Qt::WA_DeleteOnClose);
+    m_reminderMessageBox->setWindowModality(Qt::NonModal);
+    connect(m_reminderMessageBox, &QObject::destroyed, this, [this] {
+        m_reminderMessageBox = nullptr;
+    });
+    m_reminderMessageBox->show();
+    m_reminderMessageBox->raise();
+    m_reminderMessageBox->activateWindow();
+    QApplication::alert(m_reminderMessageBox, 8'000);
 }
 
 void MemoApplication::createTrayMenu()
