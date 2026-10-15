@@ -15,7 +15,7 @@ FloatingBall::FloatingBall(QWidget *parent)
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setFixedSize(58, 58);
-    setToolTip(tr("点击查看今天的备忘录，拖动可改变位置"));
+    setToolTip(tr("点击查看备忘录，拖动可改变位置"));
     setCursor(Qt::PointingHandCursor);
 }
 

@@ -22,11 +22,16 @@
 MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
     : QWidget(parent, Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint),
       m_repository(repository),
+      m_selectedDate(QDate::currentDate()),
+      m_titleLabel(new QLabel(this)),
       m_dateLabel(new QLabel(this)),
+      m_previousDayButton(new QPushButton(QStringLiteral("‹"), this)),
+      m_nextDayButton(new QPushButton(QStringLiteral("›"), this)),
+      m_todayButton(new QPushButton(tr("今天"), this)),
       m_scrollArea(new QScrollArea(this)),
       m_listContainer(new QWidget),
       m_listLayout(new QVBoxLayout(m_listContainer)),
-      m_emptyLabel(new QLabel(tr("今天还没有备忘录\n点击右上角的＋开始记录"), m_listContainer))
+      m_emptyLabel(new QLabel(m_listContainer))
 {
     setObjectName(QStringLiteral("memoPanel"));
     setAttribute(Qt::WA_TranslucentBackground);
@@ -35,14 +40,13 @@ MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
     setMinimumHeight(220);
     setMaximumHeight(560);
 
-    auto *title = new QLabel(tr("今天的备忘录"), this);
-    title->setObjectName(QStringLiteral("panelTitle"));
+    m_titleLabel->setObjectName(QStringLiteral("panelTitle"));
     m_dateLabel->setObjectName(QStringLiteral("dateLabel"));
 
     auto *titleLayout = new QVBoxLayout;
     titleLayout->setContentsMargins(0, 0, 0, 0);
     titleLayout->setSpacing(2);
-    titleLayout->addWidget(title);
+    titleLayout->addWidget(m_titleLabel);
     titleLayout->addWidget(m_dateLabel);
 
     auto *addButton = new QPushButton(IconFactory::addIcon(), QString(), this);
@@ -60,6 +64,31 @@ MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
     header->addLayout(titleLayout, 1);
     header->addWidget(addButton);
     header->addWidget(closeButton);
+
+    for (QPushButton *button : {m_previousDayButton, m_nextDayButton}) {
+        button->setObjectName(QStringLiteral("dateNavigationButton"));
+        button->setFixedSize(34, 30);
+        button->setFocusPolicy(Qt::NoFocus);
+    }
+    m_previousDayButton->setToolTip(tr("查看前一天"));
+    m_nextDayButton->setToolTip(tr("查看后一天"));
+    m_previousDayButton->setAccessibleName(tr("前一天"));
+    m_nextDayButton->setAccessibleName(tr("后一天"));
+
+    m_todayButton->setObjectName(QStringLiteral("todayButton"));
+    m_todayButton->setFixedHeight(30);
+    m_todayButton->setMinimumWidth(56);
+    m_todayButton->setFocusPolicy(Qt::NoFocus);
+    m_todayButton->setToolTip(tr("回到今天"));
+
+    auto *dateNavigation = new QHBoxLayout;
+    dateNavigation->setContentsMargins(0, 0, 0, 0);
+    dateNavigation->setSpacing(8);
+    dateNavigation->addWidget(m_previousDayButton);
+    dateNavigation->addStretch();
+    dateNavigation->addWidget(m_todayButton);
+    dateNavigation->addStretch();
+    dateNavigation->addWidget(m_nextDayButton);
 
     m_listLayout->setContentsMargins(0, 0, 0, 0);
     m_listLayout->setSpacing(8);
@@ -83,6 +112,7 @@ MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
     surfaceLayout->setContentsMargins(18, 16, 18, 18);
     surfaceLayout->setSpacing(14);
     surfaceLayout->addLayout(header);
+    surfaceLayout->addLayout(dateNavigation);
     surfaceLayout->addWidget(m_scrollArea, 1);
 
     auto *layout = new QVBoxLayout(this);
@@ -95,16 +125,24 @@ MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
     shadow->setOffset(0, 5);
     surface->setGraphicsEffect(shadow);
 
+    connect(m_previousDayButton, &QPushButton::clicked, this, &MemoPanel::showPreviousDay);
+    connect(m_nextDayButton, &QPushButton::clicked, this, &MemoPanel::showNextDay);
+    connect(m_todayButton, &QPushButton::clicked, this, &MemoPanel::showToday);
     connect(addButton, &QPushButton::clicked, this, &MemoPanel::addMemo);
     connect(closeButton, &QPushButton::clicked, this, &MemoPanel::closeRequested);
+
+    updateDateControls();
 }
 
 void MemoPanel::refresh()
 {
-    m_dateLabel->setText(QLocale().toString(QDate::currentDate(), QStringLiteral("M月d日 dddd")));
+    updateDateControls();
     clearList();
-    const QList<Memo> memos = m_repository->createdOn(QDate::currentDate());
+    const QList<Memo> memos = m_repository->createdOn(m_selectedDate);
     const bool isEmpty = memos.isEmpty();
+    m_emptyLabel->setText(m_selectedDate == QDate::currentDate()
+                              ? tr("今天还没有备忘录\n点击右上角的＋开始记录")
+                              : tr("这一天没有备忘录"));
     m_scrollArea->setVerticalScrollBarPolicy(isEmpty ? Qt::ScrollBarAlwaysOff
                                                      : Qt::ScrollBarAsNeeded);
     m_emptyLabel->setVisible(isEmpty);
@@ -123,8 +161,32 @@ void MemoPanel::refresh()
         m_listLayout->insertWidget(m_listLayout->count() - 1, item);
     }
 
-    const int preferredHeight = isEmpty ? 226 : qBound(240, 126 + memos.size() * 78, 540);
+    const int preferredHeight = isEmpty ? 270 : qBound(284, 170 + memos.size() * 78, 540);
     resize(width(), preferredHeight);
+}
+
+void MemoPanel::showPreviousDay()
+{
+    m_selectedDate = m_selectedDate.addDays(-1);
+    refresh();
+}
+
+void MemoPanel::showNextDay()
+{
+    if (m_selectedDate >= QDate::currentDate()) {
+        return;
+    }
+    m_selectedDate = m_selectedDate.addDays(1);
+    refresh();
+}
+
+void MemoPanel::showToday()
+{
+    if (m_selectedDate == QDate::currentDate()) {
+        return;
+    }
+    m_selectedDate = QDate::currentDate();
+    refresh();
 }
 
 void MemoPanel::leaveEvent(QEvent *event)
@@ -158,6 +220,11 @@ void MemoPanel::paintEvent(QPaintEvent *event)
 
 void MemoPanel::addMemo()
 {
+    if (m_selectedDate != QDate::currentDate()) {
+        m_selectedDate = QDate::currentDate();
+        refresh();
+    }
+
     MemoEditorDialog editor(this);
     if (editor.exec() != QDialog::Accepted) {
         return;
@@ -227,6 +294,26 @@ void MemoPanel::clearList()
         delete item;
     }
     m_listLayout->addStretch();
+}
+
+void MemoPanel::updateDateControls()
+{
+    const QDate today = QDate::currentDate();
+    if (!m_selectedDate.isValid() || m_selectedDate > today) {
+        m_selectedDate = today;
+    }
+
+    if (m_selectedDate == today) {
+        m_titleLabel->setText(tr("今天的备忘录"));
+    } else if (m_selectedDate == today.addDays(-1)) {
+        m_titleLabel->setText(tr("昨天的备忘录"));
+    } else {
+        m_titleLabel->setText(tr("历史备忘录"));
+    }
+
+    m_dateLabel->setText(QLocale().toString(m_selectedDate, QStringLiteral("yyyy年M月d日 dddd")));
+    m_nextDayButton->setEnabled(m_selectedDate < today);
+    m_todayButton->setEnabled(m_selectedDate != today);
 }
 
 void MemoPanel::showError(const QString &operation)

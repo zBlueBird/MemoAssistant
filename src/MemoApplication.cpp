@@ -395,6 +395,37 @@ void MemoApplication::applyStyleSheet()
             color: #7A8799;
             font-size: 11px;
         }
+        QPushButton#dateNavigationButton,
+        QPushButton#todayButton {
+            border: 1px solid #D5DEEA;
+            border-radius: 7px;
+            background: #FFFFFF;
+            color: #536177;
+        }
+        QPushButton#dateNavigationButton {
+            font-size: 22px;
+            font-weight: 500;
+            padding-bottom: 3px;
+        }
+        QPushButton#todayButton {
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        QPushButton#dateNavigationButton:hover,
+        QPushButton#todayButton:hover {
+            background: #E9EFFF;
+            border-color: #AFC2F5;
+            color: #315FD6;
+        }
+        QPushButton#dateNavigationButton:pressed,
+        QPushButton#todayButton:pressed { background: #DCE6FF; }
+        QPushButton#dateNavigationButton:disabled,
+        QPushButton#todayButton:disabled {
+            background: #F2F5F9;
+            border-color: #E4E9F0;
+            color: #AAB4C2;
+        }
         QLabel#emptyLabel {
             color: #8995A5;
             line-height: 1.6;
