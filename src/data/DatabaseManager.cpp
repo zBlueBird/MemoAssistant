@@ -58,7 +58,7 @@ bool DatabaseManager::initialize()
 
 bool DatabaseManager::migrateSchema()
 {
-    constexpr int latestSchemaVersion = 1;
+    constexpr int latestSchemaVersion = 2;
 
     QSqlDatabase db = database();
     QSqlQuery versionQuery(db);
@@ -75,7 +75,14 @@ bool DatabaseManager::migrateSchema()
         return false;
     }
 
-    if (currentVersion < 1 && !migrateToVersion1(db)) {
+    int version = currentVersion;
+    if (version < 1) {
+        if (!migrateToVersion1(db)) {
+            return false;
+        }
+        version = 1;
+    }
+    if (version < 2 && !migrateToVersion2(db)) {
         return false;
     }
 
@@ -108,6 +115,34 @@ bool DatabaseManager::migrateToVersion1(QSqlDatabase db)
         && query.exec(QStringLiteral(
             "CREATE INDEX idx_memos_due ON memos(reminder_at, reminder_sent, completed)"))
         && query.exec(QStringLiteral("PRAGMA user_version = 1"));
+
+    if (!ok) {
+        m_lastError = query.lastError().text();
+        db.rollback();
+        return false;
+    }
+
+    if (!db.commit()) {
+        m_lastError = db.lastError().text();
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::migrateToVersion2(QSqlDatabase db)
+{
+    if (!db.transaction()) {
+        m_lastError = db.lastError().text();
+        return false;
+    }
+
+    QSqlQuery query(db);
+    const bool ok = query.exec(QStringLiteral("ALTER TABLE memos ADD COLUMN scheduled_date TEXT"))
+        && query.exec(QStringLiteral(
+            "UPDATE memos SET scheduled_date = date(created_at, 'localtime') WHERE scheduled_date IS NULL"))
+        && query.exec(QStringLiteral(
+            "CREATE INDEX idx_memos_scheduled_date ON memos(scheduled_date, completed, created_at)"))
+        && query.exec(QStringLiteral("PRAGMA user_version = 2"));
 
     if (!ok) {
         m_lastError = query.lastError().text();

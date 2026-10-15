@@ -20,6 +20,7 @@ public:
 private:
     bool migrateSchema();
     bool migrateToVersion1(QSqlDatabase database);
+    bool migrateToVersion2(QSqlDatabase database);
 
     QString m_databasePath;
     QString m_connectionName;

@@ -9,6 +9,7 @@ struct Memo
     QString title;
     QString content;
     QDateTime createdAt;
+    QDate scheduledDate;
     QDateTime updatedAt;
     QDateTime reminderAt;
     QDateTime completedAt;

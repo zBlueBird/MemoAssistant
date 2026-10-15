@@ -496,6 +496,45 @@ void MemoApplication::applyStyleSheet()
             border-color: #E4E9F0;
             color: #AAB4C2;
         }
+        QPushButton#viewModeButton {
+            background: #FFFFFF;
+            color: #657286;
+            border: 1px solid #D5DEEA;
+            padding: 3px 10px;
+        }
+        QPushButton#viewModeButton:first { border-radius: 7px 0 0 7px; }
+        QPushButton#viewModeButton:last { border-radius: 0 7px 7px 0; }
+        QPushButton#viewModeButton:checked {
+            background: #4F7CFF;
+            color: #FFFFFF;
+            border-color: #4F7CFF;
+            font-weight: 600;
+        }
+        QCalendarWidget#taskCalendar {
+            background: #FFFFFF;
+            border: 1px solid #E0E6EF;
+            border-radius: 10px;
+        }
+        QToolButton#weekDayButton {
+            background: #FFFFFF;
+            color: #536177;
+            border: 1px solid #DDE4EE;
+            border-radius: 9px;
+            padding: 8px 2px;
+            font-size: 12px;
+        }
+        QToolButton#weekDayButton[hasTasks="true"] {
+            background: #F1F5FF;
+            border-color: #B8C9F6;
+            color: #315FD6;
+            font-weight: 600;
+        }
+        QToolButton#weekDayButton:hover { border-color: #7899ED; }
+        QToolButton#weekDayButton:checked {
+            background: #4F7CFF;
+            border-color: #4F7CFF;
+            color: #FFFFFF;
+        }
         QLabel#emptyLabel {
             color: #8995A5;
             line-height: 1.6;
@@ -620,6 +659,7 @@ void MemoApplication::applyStyleSheet()
         }
         QLineEdit#editorTitleInput,
         QTextEdit#editorContentInput,
+        QDateEdit#editorScheduledDate,
         QDateEdit#editorReminderDate,
         QTimeEdit#editorReminderTime {
             color: #263448;
@@ -630,6 +670,7 @@ void MemoApplication::applyStyleSheet()
         }
         QLineEdit#editorTitleInput:focus,
         QTextEdit#editorContentInput:focus,
+        QDateEdit#editorScheduledDate:focus,
         QDateEdit#editorReminderDate:focus,
         QTimeEdit#editorReminderTime:focus {
             border: 2px solid #4F7CFF;
@@ -645,6 +686,7 @@ void MemoApplication::applyStyleSheet()
             color: #657286;
             padding: 0 2px;
         }
+        QDateEdit#editorScheduledDate::drop-down,
         QDateEdit#editorReminderDate::drop-down {
             subcontrol-origin: padding;
             subcontrol-position: top right;
@@ -655,7 +697,9 @@ void MemoApplication::applyStyleSheet()
             border-top-right-radius: 7px;
             border-bottom-right-radius: 7px;
         }
+        QDateEdit#editorScheduledDate::drop-down:hover,
         QDateEdit#editorReminderDate::drop-down:hover { background: #E9EFFF; }
+        QDateEdit#editorScheduledDate::down-arrow,
         QDateEdit#editorReminderDate::down-arrow {
             image: url(:/icons/icons/chevron-down.svg);
             width: 14px;

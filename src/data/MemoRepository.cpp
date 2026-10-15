@@ -8,7 +8,7 @@
 
 namespace {
 constexpr auto selectColumns =
-    "SELECT id, title, content, created_at, updated_at, reminder_at, completed_at, completed, reminder_sent "
+    "SELECT id, title, content, created_at, updated_at, reminder_at, completed_at, completed, reminder_sent, scheduled_date "
     "FROM memos ";
 }
 
@@ -25,9 +25,9 @@ std::optional<qint64> MemoRepository::add(const Memo &memo)
     QSqlQuery query(m_database);
     query.prepare(QStringLiteral(R"SQL(
         INSERT INTO memos(title, content, created_at, updated_at, reminder_at,
-                          completed_at, completed, reminder_sent)
+                          completed_at, completed, reminder_sent, scheduled_date)
         VALUES(:title, :content, :created_at, :updated_at, :reminder_at,
-               :completed_at, :completed, :reminder_sent)
+               :completed_at, :completed, :reminder_sent, :scheduled_date)
     )SQL"));
     query.bindValue(QStringLiteral(":title"), memo.title.trimmed());
     query.bindValue(QStringLiteral(":content"), memo.content.isNull() ? QStringLiteral("") : memo.content);
@@ -39,6 +39,10 @@ std::optional<qint64> MemoRepository::add(const Memo &memo)
                     memo.completedAt.isValid() ? QVariant(toStorage(memo.completedAt)) : QVariant());
     query.bindValue(QStringLiteral(":completed"), memo.completed);
     query.bindValue(QStringLiteral(":reminder_sent"), memo.reminderSent);
+    const QDate scheduledDate = memo.scheduledDate.isValid()
+                                    ? memo.scheduledDate
+                                    : createdAt.toLocalTime().date();
+    query.bindValue(QStringLiteral(":scheduled_date"), scheduledDate.toString(Qt::ISODate));
 
     if (!query.exec()) {
         setError(query.lastError().text());
@@ -53,7 +57,8 @@ bool MemoRepository::update(const Memo &memo)
     query.prepare(QStringLiteral(R"SQL(
         UPDATE memos
         SET title = :title, content = :content, updated_at = :updated_at,
-            reminder_at = :reminder_at, reminder_sent = :reminder_sent
+            reminder_at = :reminder_at, reminder_sent = :reminder_sent,
+            scheduled_date = :scheduled_date
         WHERE id = :id
     )SQL"));
     query.bindValue(QStringLiteral(":title"), memo.title.trimmed());
@@ -62,6 +67,10 @@ bool MemoRepository::update(const Memo &memo)
     query.bindValue(QStringLiteral(":reminder_at"),
                     memo.reminderAt.isValid() ? QVariant(toStorage(memo.reminderAt)) : QVariant());
     query.bindValue(QStringLiteral(":reminder_sent"), memo.reminderSent);
+    const QDate scheduledDate = memo.scheduledDate.isValid()
+                                    ? memo.scheduledDate
+                                    : memo.createdAt.toLocalTime().date();
+    query.bindValue(QStringLiteral(":scheduled_date"), scheduledDate.toString(Qt::ISODate));
     query.bindValue(QStringLiteral(":id"), memo.id);
     if (!query.exec()) {
         setError(query.lastError().text());
@@ -114,17 +123,13 @@ bool MemoRepository::setCompleted(qint64 id, bool completed)
     return true;
 }
 
-QList<Memo> MemoRepository::createdOn(const QDate &localDate) const
+QList<Memo> MemoRepository::scheduledOn(const QDate &date) const
 {
-    const QDateTime localStart(localDate, QTime(0, 0), QTimeZone::systemTimeZone());
-    const QDateTime localEnd = localStart.addDays(1);
-
     QSqlQuery query(m_database);
     query.prepare(QString::fromLatin1(selectColumns)
-                  + QStringLiteral("WHERE created_at >= :start AND created_at < :end "
+                  + QStringLiteral("WHERE scheduled_date = :date "
                                    "ORDER BY completed ASC, created_at DESC"));
-    query.bindValue(QStringLiteral(":start"), toStorage(localStart));
-    query.bindValue(QStringLiteral(":end"), toStorage(localEnd));
+    query.bindValue(QStringLiteral(":date"), date.toString(Qt::ISODate));
 
     QList<Memo> result;
     if (!query.exec()) {
@@ -133,6 +138,29 @@ QList<Memo> MemoRepository::createdOn(const QDate &localDate) const
     }
     while (query.next()) {
         result.append(fromQuery(query));
+    }
+    return result;
+}
+
+QMap<QDate, int> MemoRepository::taskCounts(const QDate &startDate, const QDate &endDate) const
+{
+    QMap<QDate, int> result;
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(R"SQL(
+        SELECT scheduled_date, COUNT(*)
+        FROM memos
+        WHERE scheduled_date >= :start AND scheduled_date <= :end
+        GROUP BY scheduled_date
+    )SQL"));
+    query.bindValue(QStringLiteral(":start"), startDate.toString(Qt::ISODate));
+    query.bindValue(QStringLiteral(":end"), endDate.toString(Qt::ISODate));
+    if (!query.exec()) {
+        setError(query.lastError().text());
+        return result;
+    }
+    while (query.next()) {
+        result.insert(QDate::fromString(query.value(0).toString(), Qt::ISODate),
+                      query.value(1).toInt());
     }
     return result;
 }
@@ -205,6 +233,7 @@ Memo MemoRepository::fromQuery(const QSqlQuery &query)
     memo.completedAt = fromStorage(query.value(6).toString());
     memo.completed = query.value(7).toBool();
     memo.reminderSent = query.value(8).toBool();
+    memo.scheduledDate = QDate::fromString(query.value(9).toString(), Qt::ISODate);
     return memo;
 }
 

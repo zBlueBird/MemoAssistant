@@ -43,6 +43,10 @@ qt_add_executable(MemoAssistant WIN32
     src/ui/FloatingBall.cpp
     src/ui/MemoPanel.h
     src/ui/MemoPanel.cpp
+    src/ui/TaskCalendarWidget.h
+    src/ui/TaskCalendarWidget.cpp
+    src/ui/WeekOverviewWidget.h
+    src/ui/WeekOverviewWidget.cpp
     src/ui/DeleteConfirmDialog.h
     src/ui/DeleteConfirmDialog.cpp
     src/ui/ReminderDialog.h

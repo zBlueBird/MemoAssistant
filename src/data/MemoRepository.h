@@ -3,6 +3,7 @@
 #include "models/Memo.h"
 
 #include <QList>
+#include <QMap>
 #include <QSqlDatabase>
 #include <QString>
 #include <optional>
@@ -16,7 +17,8 @@ public:
     bool update(const Memo &memo);
     bool remove(qint64 id);
     bool setCompleted(qint64 id, bool completed);
-    QList<Memo> createdOn(const QDate &localDate) const;
+    QList<Memo> scheduledOn(const QDate &date) const;
+    QMap<QDate, int> taskCounts(const QDate &startDate, const QDate &endDate) const;
     QList<Memo> dueReminders(const QDateTime &utcNow) const;
     bool markReminderSent(qint64 id);
     std::optional<Memo> findById(qint64 id) const;

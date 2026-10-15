@@ -17,6 +17,7 @@ class MemoEditorDialog : public QDialog
 public:
     explicit MemoEditorDialog(QWidget *parent = nullptr);
 
+    void setScheduledDate(const QDate &date);
     void setMemo(const Memo &memo);
     Memo memo() const;
 
@@ -28,6 +29,7 @@ private:
     Memo m_memo;
     QLineEdit *m_titleEdit;
     QTextEdit *m_contentEdit;
+    QDateEdit *m_scheduledDateEdit;
     QCheckBox *m_reminderCheck;
     QDateEdit *m_reminderDateEdit;
     QTimeEdit *m_reminderTimeEdit;

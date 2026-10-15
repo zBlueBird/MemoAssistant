@@ -5,6 +5,8 @@
 #include "ui/IconFactory.h"
 #include "ui/MemoEditorDialog.h"
 #include "ui/MemoItemWidget.h"
+#include "ui/TaskCalendarWidget.h"
+#include "ui/WeekOverviewWidget.h"
 
 #include <QDate>
 #include <QEvent>
@@ -17,6 +19,7 @@
 #include <QPainter>
 #include <QPushButton>
 #include <QScrollArea>
+#include <QStackedWidget>
 #include <QVBoxLayout>
 
 MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
@@ -28,6 +31,12 @@ MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
       m_previousDayButton(new QPushButton(QStringLiteral("‹"), this)),
       m_nextDayButton(new QPushButton(QStringLiteral("›"), this)),
       m_todayButton(new QPushButton(tr("今天"), this)),
+      m_dayViewButton(new QPushButton(tr("日"), this)),
+      m_weekViewButton(new QPushButton(tr("周"), this)),
+      m_monthViewButton(new QPushButton(tr("月"), this)),
+      m_contentStack(new QStackedWidget(this)),
+      m_weekOverview(new WeekOverviewWidget(this)),
+      m_calendar(new TaskCalendarWidget(this)),
       m_scrollArea(new QScrollArea(this)),
       m_listContainer(new QWidget),
       m_listLayout(new QVBoxLayout(m_listContainer)),
@@ -36,7 +45,7 @@ MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
     setObjectName(QStringLiteral("memoPanel"));
     setAttribute(Qt::WA_TranslucentBackground);
     setFocusPolicy(Qt::StrongFocus);
-    setFixedWidth(380);
+    setFixedWidth(420);
     setMinimumHeight(220);
     setMaximumHeight(560);
 
@@ -90,6 +99,24 @@ MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
     dateNavigation->addStretch();
     dateNavigation->addWidget(m_nextDayButton);
 
+    for (QPushButton *button : {m_dayViewButton, m_weekViewButton, m_monthViewButton}) {
+        button->setObjectName(QStringLiteral("viewModeButton"));
+        button->setCheckable(true);
+        button->setAutoExclusive(true);
+        button->setFixedSize(46, 28);
+        button->setFocusPolicy(Qt::NoFocus);
+    }
+    m_dayViewButton->setChecked(true);
+
+    auto *viewModes = new QHBoxLayout;
+    viewModes->setContentsMargins(0, 0, 0, 0);
+    viewModes->setSpacing(0);
+    viewModes->addStretch();
+    viewModes->addWidget(m_dayViewButton);
+    viewModes->addWidget(m_weekViewButton);
+    viewModes->addWidget(m_monthViewButton);
+    viewModes->addStretch();
+
     m_listLayout->setContentsMargins(0, 0, 0, 0);
     m_listLayout->setSpacing(8);
     m_listLayout->addStretch();
@@ -106,14 +133,22 @@ MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
     m_scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
+    m_calendar->setMinimumDate(QDate(2000, 1, 1));
+    m_calendar->setMaximumDate(QDate::currentDate().addYears(20));
+    m_calendar->setSelectedDate(m_selectedDate);
+    m_contentStack->addWidget(m_scrollArea);
+    m_contentStack->addWidget(m_weekOverview);
+    m_contentStack->addWidget(m_calendar);
+
     auto *surface = new QWidget(this);
     surface->setObjectName(QStringLiteral("panelSurface"));
     auto *surfaceLayout = new QVBoxLayout(surface);
     surfaceLayout->setContentsMargins(18, 16, 18, 18);
     surfaceLayout->setSpacing(14);
     surfaceLayout->addLayout(header);
+    surfaceLayout->addLayout(viewModes);
     surfaceLayout->addLayout(dateNavigation);
-    surfaceLayout->addWidget(m_scrollArea, 1);
+    surfaceLayout->addWidget(m_contentStack, 1);
 
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(10, 10, 10, 12);
@@ -125,9 +160,14 @@ MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
     shadow->setOffset(0, 5);
     surface->setGraphicsEffect(shadow);
 
-    connect(m_previousDayButton, &QPushButton::clicked, this, &MemoPanel::showPreviousDay);
-    connect(m_nextDayButton, &QPushButton::clicked, this, &MemoPanel::showNextDay);
+    connect(m_previousDayButton, &QPushButton::clicked, this, &MemoPanel::showPreviousPeriod);
+    connect(m_nextDayButton, &QPushButton::clicked, this, &MemoPanel::showNextPeriod);
     connect(m_todayButton, &QPushButton::clicked, this, &MemoPanel::showToday);
+    connect(m_dayViewButton, &QPushButton::clicked, this, &MemoPanel::setDayView);
+    connect(m_weekViewButton, &QPushButton::clicked, this, &MemoPanel::setWeekView);
+    connect(m_monthViewButton, &QPushButton::clicked, this, &MemoPanel::setMonthView);
+    connect(m_weekOverview, &WeekOverviewWidget::dateSelected, this, &MemoPanel::selectCalendarDate);
+    connect(m_calendar, &QCalendarWidget::clicked, this, &MemoPanel::selectCalendarDate);
     connect(addButton, &QPushButton::clicked, this, &MemoPanel::addMemo);
     connect(closeButton, &QPushButton::clicked, this, &MemoPanel::closeRequested);
 
@@ -137,8 +177,9 @@ MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
 void MemoPanel::refresh()
 {
     updateDateControls();
+    updateCalendar();
     clearList();
-    const QList<Memo> memos = m_repository->createdOn(m_selectedDate);
+    const QList<Memo> memos = m_repository->scheduledOn(m_selectedDate);
     const bool isEmpty = memos.isEmpty();
     m_emptyLabel->setText(m_selectedDate == QDate::currentDate()
                               ? tr("今天还没有备忘录\n点击右上角的＋开始记录")
@@ -161,32 +202,61 @@ void MemoPanel::refresh()
         m_listLayout->insertWidget(m_listLayout->count() - 1, item);
     }
 
-    const int preferredHeight = isEmpty ? 270 : qBound(284, 170 + memos.size() * 78, 540);
+    const int preferredHeight = m_viewMode == ViewMode::Day
+                                    ? (isEmpty ? 300 : qBound(314, 200 + memos.size() * 78, 540))
+                                    : 500;
     resize(width(), preferredHeight);
 }
 
-void MemoPanel::showPreviousDay()
+void MemoPanel::showPreviousPeriod()
 {
-    m_selectedDate = m_selectedDate.addDays(-1);
+    if (m_viewMode == ViewMode::Month) {
+        m_selectedDate = m_selectedDate.addMonths(-1);
+    } else if (m_viewMode == ViewMode::Week) {
+        m_selectedDate = m_selectedDate.addDays(-7);
+    } else {
+        m_selectedDate = m_selectedDate.addDays(-1);
+    }
     refresh();
 }
 
-void MemoPanel::showNextDay()
+void MemoPanel::showNextPeriod()
 {
-    if (m_selectedDate >= QDate::currentDate()) {
-        return;
+    if (m_viewMode == ViewMode::Month) {
+        m_selectedDate = m_selectedDate.addMonths(1);
+    } else if (m_viewMode == ViewMode::Week) {
+        m_selectedDate = m_selectedDate.addDays(7);
+    } else {
+        m_selectedDate = m_selectedDate.addDays(1);
     }
-    m_selectedDate = m_selectedDate.addDays(1);
     refresh();
 }
 
 void MemoPanel::showToday()
 {
-    if (m_selectedDate == QDate::currentDate()) {
-        return;
-    }
     m_selectedDate = QDate::currentDate();
     refresh();
+}
+
+void MemoPanel::setDayView()
+{
+    setViewMode(ViewMode::Day);
+}
+
+void MemoPanel::setWeekView()
+{
+    setViewMode(ViewMode::Week);
+}
+
+void MemoPanel::setMonthView()
+{
+    setViewMode(ViewMode::Month);
+}
+
+void MemoPanel::selectCalendarDate(const QDate &date)
+{
+    m_selectedDate = date;
+    setViewMode(ViewMode::Day);
 }
 
 void MemoPanel::leaveEvent(QEvent *event)
@@ -220,20 +290,18 @@ void MemoPanel::paintEvent(QPaintEvent *event)
 
 void MemoPanel::addMemo()
 {
-    if (m_selectedDate != QDate::currentDate()) {
-        m_selectedDate = QDate::currentDate();
-        refresh();
-    }
-
     MemoEditorDialog editor(this);
+    editor.setScheduledDate(m_selectedDate);
     if (editor.exec() != QDialog::Accepted) {
         return;
     }
-    if (!m_repository->add(editor.memo())) {
+    const Memo memo = editor.memo();
+    if (!m_repository->add(memo)) {
         showError(tr("创建备忘录"));
         return;
     }
-    refresh();
+    m_selectedDate = memo.scheduledDate;
+    setViewMode(ViewMode::Day);
     emit memoChanged();
 }
 
@@ -250,11 +318,13 @@ void MemoPanel::editMemo(qint64 id)
     if (editor.exec() != QDialog::Accepted) {
         return;
     }
-    if (!m_repository->update(editor.memo())) {
+    const Memo updatedMemo = editor.memo();
+    if (!m_repository->update(updatedMemo)) {
         showError(tr("更新备忘录"));
         return;
     }
-    refresh();
+    m_selectedDate = updatedMemo.scheduledDate;
+    setViewMode(ViewMode::Day);
     emit memoChanged();
 }
 
@@ -299,21 +369,82 @@ void MemoPanel::clearList()
 void MemoPanel::updateDateControls()
 {
     const QDate today = QDate::currentDate();
-    if (!m_selectedDate.isValid() || m_selectedDate > today) {
+    if (!m_selectedDate.isValid()) {
         m_selectedDate = today;
     }
 
-    if (m_selectedDate == today) {
-        m_titleLabel->setText(tr("今天的备忘录"));
-    } else if (m_selectedDate == today.addDays(-1)) {
-        m_titleLabel->setText(tr("昨天的备忘录"));
+    if (m_viewMode == ViewMode::Day) {
+        if (m_selectedDate == today) {
+            m_titleLabel->setText(tr("今天的备忘录"));
+        } else if (m_selectedDate == today.addDays(-1)) {
+            m_titleLabel->setText(tr("昨天的备忘录"));
+        } else if (m_selectedDate > today) {
+            m_titleLabel->setText(tr("未来备忘录"));
+        } else {
+            m_titleLabel->setText(tr("历史备忘录"));
+        }
+        m_dateLabel->setText(QLocale().toString(m_selectedDate, QStringLiteral("yyyy年M月d日 dddd")));
     } else {
-        m_titleLabel->setText(tr("历史备忘录"));
+        const auto [start, end] = visibleRange();
+        m_titleLabel->setText(m_viewMode == ViewMode::Week ? tr("一周任务") : tr("一月任务"));
+        m_dateLabel->setText(m_viewMode == ViewMode::Week
+                                 ? tr("%1 至 %2").arg(start.toString(QStringLiteral("M月d日")),
+                                                     end.toString(QStringLiteral("M月d日")))
+                                 : m_selectedDate.toString(QStringLiteral("yyyy年M月")));
     }
 
-    m_dateLabel->setText(QLocale().toString(m_selectedDate, QStringLiteral("yyyy年M月d日 dddd")));
-    m_nextDayButton->setEnabled(m_selectedDate < today);
-    m_todayButton->setEnabled(m_selectedDate != today);
+    m_todayButton->setEnabled(m_selectedDate != today || m_viewMode != ViewMode::Day);
+    m_previousDayButton->setToolTip(m_viewMode == ViewMode::Day ? tr("前一天")
+                                                                 : m_viewMode == ViewMode::Week ? tr("前一周")
+                                                                                                 : tr("前一月"));
+    m_nextDayButton->setToolTip(m_viewMode == ViewMode::Day ? tr("后一天")
+                                                             : m_viewMode == ViewMode::Week ? tr("后一周")
+                                                                                             : tr("后一月"));
+}
+
+void MemoPanel::updateCalendar()
+{
+    if (m_viewMode == ViewMode::Day) {
+        m_contentStack->setCurrentWidget(m_scrollArea);
+        return;
+    }
+
+    const auto [start, end] = visibleRange();
+    const QMap<QDate, int> counts = m_repository->taskCounts(start, end);
+    if (m_viewMode == ViewMode::Week) {
+        m_weekOverview->setWeek(start, m_selectedDate, counts);
+        m_contentStack->setCurrentWidget(m_weekOverview);
+        return;
+    }
+
+    m_calendar->setMinimumDate(start);
+    m_calendar->setMaximumDate(end);
+    m_calendar->setCurrentPage(m_selectedDate.year(), m_selectedDate.month());
+    m_calendar->setSelectedDate(m_selectedDate);
+    m_calendar->setTaskCounts(counts);
+    m_contentStack->setCurrentWidget(m_calendar);
+}
+
+QPair<QDate, QDate> MemoPanel::visibleRange() const
+{
+    if (m_viewMode == ViewMode::Week) {
+        const QDate start = m_selectedDate.addDays(1 - m_selectedDate.dayOfWeek());
+        return {start, start.addDays(6)};
+    }
+    if (m_viewMode == ViewMode::Month) {
+        const QDate start(m_selectedDate.year(), m_selectedDate.month(), 1);
+        return {start, start.addMonths(1).addDays(-1)};
+    }
+    return {m_selectedDate, m_selectedDate};
+}
+
+void MemoPanel::setViewMode(ViewMode mode)
+{
+    m_viewMode = mode;
+    m_dayViewButton->setChecked(mode == ViewMode::Day);
+    m_weekViewButton->setChecked(mode == ViewMode::Week);
+    m_monthViewButton->setChecked(mode == ViewMode::Month);
+    refresh();
 }
 
 void MemoPanel::showError(const QString &operation)

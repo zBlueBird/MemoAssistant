@@ -32,7 +32,7 @@ MemoItemWidget::MemoItemWidget(const Memo &memo, QWidget *parent)
 
     auto *metaLabel = new QLabel(this);
     QStringList metadata;
-    metadata << tr("创建于 %1").arg(memo.createdAt.toLocalTime().toString(QStringLiteral("HH:mm")));
+    metadata << tr("计划 %1").arg(memo.scheduledDate.toString(QStringLiteral("MM-dd")));
     if (memo.reminderAt.isValid()) {
         metadata << tr("提醒 %1").arg(memo.reminderAt.toLocalTime().toString(QStringLiteral("MM-dd HH:mm")));
     }

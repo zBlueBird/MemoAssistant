@@ -25,8 +25,9 @@ private slots:
     void updateMemo();
     void completeMemo();
     void returnDueRemindersOnly();
-    void queryCreatedOnByLocalDate();
-    void initializeExistingVersionOneDatabase();
+    void queryScheduledDateAndCounts();
+    void migrateVersionOneDatabase();
+    void reopenVersionTwoDatabase();
     void rejectUnsupportedDatabaseVersion();
     void triggerDueReminder();
     void persistSettings();
@@ -69,6 +70,7 @@ void MemoRepositoryTests::addAndFindMemo()
     QCOMPARE(saved->title, memo.title);
     QCOMPARE(saved->content, memo.content);
     QVERIFY(saved->createdAt.isValid());
+    QCOMPARE(saved->scheduledDate, QDate::currentDate());
     QVERIFY(!saved->completed);
 }
 
@@ -126,57 +128,96 @@ void MemoRepositoryTests::returnDueRemindersOnly()
     QVERIFY(m_repository->dueReminders(QDateTime::currentDateTimeUtc()).isEmpty());
 }
 
-void MemoRepositoryTests::queryCreatedOnByLocalDate()
+void MemoRepositoryTests::queryScheduledDateAndCounts()
 {
-    const QDate localDate(2026, 10, 15);
-    const QTimeZone localZone = QTimeZone::systemTimeZone();
+    const QDate firstDate(2026, 10, 15);
+    const QDate secondDate = firstDate.addDays(2);
 
-    Memo before;
-    before.title = QStringLiteral("前一天");
-    before.createdAt = QDateTime(localDate, QTime(0, 0), localZone).addMSecs(-1).toUTC();
-    QVERIFY(m_repository->add(before).has_value());
+    Memo first;
+    first.title = QStringLiteral("第一项");
+    first.scheduledDate = firstDate;
+    QVERIFY(m_repository->add(first).has_value());
 
-    Memo start;
-    start.title = QStringLiteral("当天开始");
-    start.createdAt = QDateTime(localDate, QTime(0, 0), localZone).toUTC();
-    QVERIFY(m_repository->add(start).has_value());
+    Memo second;
+    second.title = QStringLiteral("第二项");
+    second.scheduledDate = secondDate;
+    QVERIFY(m_repository->add(second).has_value());
 
-    Memo end;
-    end.title = QStringLiteral("当天结束");
-    end.createdAt = QDateTime(localDate.addDays(1), QTime(0, 0), localZone).addMSecs(-1).toUTC();
-    QVERIFY(m_repository->add(end).has_value());
+    Memo third;
+    third.title = QStringLiteral("第三项");
+    third.scheduledDate = secondDate;
+    QVERIFY(m_repository->add(third).has_value());
 
-    Memo after;
-    after.title = QStringLiteral("后一天");
-    after.createdAt = QDateTime(localDate.addDays(1), QTime(0, 0), localZone).toUTC();
-    QVERIFY(m_repository->add(after).has_value());
-
-    const QList<Memo> result = m_repository->createdOn(localDate);
-    QCOMPARE(result.size(), 2);
-    QCOMPARE(result.at(0).title, end.title);
-    QCOMPARE(result.at(1).title, start.title);
-}
-
-void MemoRepositoryTests::initializeExistingVersionOneDatabase()
-{
-    {
-        QSqlQuery query(m_database->database());
-        QVERIFY(query.exec(QStringLiteral("PRAGMA user_version")));
-        QVERIFY(query.next());
-        QCOMPARE(query.value(0).toInt(), 1);
+    const QList<Memo> scheduled = m_repository->scheduledOn(secondDate);
+    QCOMPARE(scheduled.size(), 2);
+    for (const Memo &memo : scheduled) {
+        QCOMPARE(memo.scheduledDate, secondDate);
     }
 
+    const QMap<QDate, int> counts = m_repository->taskCounts(firstDate, secondDate);
+    QCOMPARE(counts.value(firstDate), 1);
+    QCOMPARE(counts.value(secondDate), 2);
+}
+
+void MemoRepositoryTests::migrateVersionOneDatabase()
+{
+    m_repository.reset();
+    m_database.reset();
+
+    const QString path = m_directory->filePath(QStringLiteral("legacy.db"));
+    const QString connectionName = QStringLiteral("legacy-%1")
+                                       .arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+    {
+        QSqlDatabase legacy = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), connectionName);
+        legacy.setDatabaseName(path);
+        QVERIFY(legacy.open());
+        QSqlQuery query(legacy);
+        QVERIFY(query.exec(QStringLiteral(R"SQL(
+            CREATE TABLE memos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                reminder_at TEXT,
+                completed_at TEXT,
+                completed INTEGER NOT NULL DEFAULT 0,
+                reminder_sent INTEGER NOT NULL DEFAULT 0
+            )
+        )SQL")));
+        QVERIFY(query.exec(QStringLiteral(R"SQL(
+            INSERT INTO memos(title, created_at, updated_at)
+            VALUES('旧记录', '2026-10-14T16:30:00.000Z', '2026-10-14T16:30:00.000Z')
+        )SQL")));
+        QVERIFY(query.exec(QStringLiteral("PRAGMA user_version = 1")));
+        legacy.close();
+    }
+    QSqlDatabase::removeDatabase(connectionName);
+
+    m_database = std::make_unique<DatabaseManager>(path);
+    QVERIFY2(m_database->initialize(), qPrintable(m_database->lastError()));
+    m_repository = std::make_unique<MemoRepository>(m_database->database());
+
+    QSqlQuery query(m_database->database());
+    QVERIFY(query.exec(QStringLiteral("PRAGMA user_version")));
+    QVERIFY(query.next());
+    QCOMPARE(query.value(0).toInt(), 2);
+    const auto migrated = m_repository->findById(1);
+    QVERIFY(migrated.has_value());
+    QVERIFY(migrated->scheduledDate.isValid());
+}
+
+void MemoRepositoryTests::reopenVersionTwoDatabase()
+{
     m_repository.reset();
     m_database.reset();
     m_database = std::make_unique<DatabaseManager>(m_directory->filePath(QStringLiteral("test.db")));
     QVERIFY2(m_database->initialize(), qPrintable(m_database->lastError()));
 
-    {
-        QSqlQuery query(m_database->database());
-        QVERIFY(query.exec(QStringLiteral("PRAGMA user_version")));
-        QVERIFY(query.next());
-        QCOMPARE(query.value(0).toInt(), 1);
-    }
+    QSqlQuery query(m_database->database());
+    QVERIFY(query.exec(QStringLiteral("PRAGMA user_version")));
+    QVERIFY(query.next());
+    QCOMPARE(query.value(0).toInt(), 2);
     m_repository = std::make_unique<MemoRepository>(m_database->database());
 }
 
@@ -184,14 +225,14 @@ void MemoRepositoryTests::rejectUnsupportedDatabaseVersion()
 {
     {
         QSqlQuery query(m_database->database());
-        QVERIFY(query.exec(QStringLiteral("PRAGMA user_version = 2")));
+        QVERIFY(query.exec(QStringLiteral("PRAGMA user_version = 3")));
     }
 
     m_repository.reset();
     m_database.reset();
     m_database = std::make_unique<DatabaseManager>(m_directory->filePath(QStringLiteral("test.db")));
     QVERIFY(!m_database->initialize());
-    QVERIFY(m_database->lastError().contains(QStringLiteral("版本 2")));
+    QVERIFY(m_database->lastError().contains(QStringLiteral("版本 3")));
 }
 
 void MemoRepositoryTests::triggerDueReminder()

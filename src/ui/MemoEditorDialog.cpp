@@ -19,6 +19,7 @@ MemoEditorDialog::MemoEditorDialog(QWidget *parent)
     : QDialog(parent),
       m_titleEdit(new QLineEdit(this)),
       m_contentEdit(new QTextEdit(this)),
+      m_scheduledDateEdit(new QDateEdit(this)),
       m_reminderCheck(new QCheckBox(tr("启用提醒"), this)),
       m_reminderDateEdit(new QDateEdit(this)),
       m_reminderTimeEdit(new QTimeEdit(this))
@@ -28,8 +29,8 @@ MemoEditorDialog::MemoEditorDialog(QWidget *parent)
     setModal(true);
     setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
-    setMinimumSize(470, 405);
-    resize(470, 405);
+    setMinimumSize(500, 465);
+    resize(500, 465);
 
     auto *surface = new QFrame(this);
     surface->setObjectName(QStringLiteral("editorSurface"));
@@ -63,6 +64,14 @@ MemoEditorDialog::MemoEditorDialog(QWidget *parent)
     m_contentEdit->setObjectName(QStringLiteral("editorContentInput"));
     m_contentEdit->setFixedHeight(118);
 
+    m_scheduledDateEdit->setObjectName(QStringLiteral("editorScheduledDate"));
+    m_scheduledDateEdit->setCalendarPopup(true);
+    m_scheduledDateEdit->setDisplayFormat(QStringLiteral("yyyy-MM-dd"));
+    m_scheduledDateEdit->setDate(QDate::currentDate());
+    m_scheduledDateEdit->setMinimumDate(QDate(2000, 1, 1));
+    m_scheduledDateEdit->setMaximumDate(QDate::currentDate().addYears(20));
+    m_scheduledDateEdit->setToolTip(tr("备忘录将在所选日期的日、周和月视图中显示"));
+
     m_reminderCheck->setObjectName(QStringLiteral("editorReminderCheck"));
     m_reminderDateEdit->setObjectName(QStringLiteral("editorReminderDate"));
     m_reminderTimeEdit->setObjectName(QStringLiteral("editorReminderTime"));
@@ -91,13 +100,15 @@ MemoEditorDialog::MemoEditorDialog(QWidget *parent)
 
     auto *titleFieldLabel = new QLabel(tr("标题"), surface);
     auto *contentFieldLabel = new QLabel(tr("内容"), surface);
+    auto *scheduledDateFieldLabel = new QLabel(tr("计划日期"), surface);
     auto *reminderFieldLabel = new QLabel(tr("提醒"), surface);
-    for (QLabel *label : {titleFieldLabel, contentFieldLabel, reminderFieldLabel}) {
+    for (QLabel *label : {titleFieldLabel, contentFieldLabel, scheduledDateFieldLabel, reminderFieldLabel}) {
         label->setObjectName(QStringLiteral("editorFieldLabel"));
         label->setMinimumWidth(42);
     }
     form->addRow(titleFieldLabel, m_titleEdit);
     form->addRow(contentFieldLabel, m_contentEdit);
+    form->addRow(scheduledDateFieldLabel, m_scheduledDateEdit);
 
     auto *dateLabel = new QLabel(tr("日期"), surface);
     auto *timeLabel = new QLabel(tr("时间"), surface);
@@ -154,11 +165,17 @@ MemoEditorDialog::MemoEditorDialog(QWidget *parent)
     connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
 
+void MemoEditorDialog::setScheduledDate(const QDate &date)
+{
+    m_scheduledDateEdit->setDate(date.isValid() ? date : QDate::currentDate());
+}
+
 void MemoEditorDialog::setMemo(const Memo &memo)
 {
     m_memo = memo;
     m_titleEdit->setText(memo.title);
     m_contentEdit->setPlainText(memo.content);
+    setScheduledDate(memo.scheduledDate);
     m_reminderCheck->setChecked(memo.reminderAt.isValid());
     if (memo.reminderAt.isValid()) {
         const QDateTime localReminder = memo.reminderAt.toLocalTime();
@@ -174,6 +191,7 @@ Memo MemoEditorDialog::memo() const
     Memo result = m_memo;
     result.title = m_titleEdit->text().trimmed();
     result.content = m_contentEdit->toPlainText().trimmed();
+    result.scheduledDate = m_scheduledDateEdit->date();
     const QTime selectedTime(m_reminderTimeEdit->time().hour(),
                              m_reminderTimeEdit->time().minute());
     result.reminderAt = m_reminderCheck->isChecked()
