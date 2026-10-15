@@ -1,0 +1,33 @@
+# Build and deployment output
+/build*/
+/cmake-build-*/
+/out/
+/dist/
+/installer-output/
+
+# Qt Creator
+*.user
+*.user.*
+CMakeLists.txt.user*
+
+# Compilers and generated files
+*.o
+*.obj
+*.exe
+*.dll
+*.a
+*.lib
+*.pdb
+*.ilk
+
+# Runtime data and logs
+*.db
+*.db-shm
+*.db-wal
+*.log
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

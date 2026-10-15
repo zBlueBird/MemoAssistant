@@ -1,0 +1,70 @@
+name: Windows CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.build-type }} / Qt 6.11.1 / MinGW 13.1
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build-type:
+          - Debug
+          - Release
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Qt and MinGW
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.11.1
+          host: windows
+          target: desktop
+          arch: win64_mingw
+          tools: tools_mingw1310,qt.tools.win64_mingw1310
+          add-tools-to-path: true
+          cache: true
+
+      - name: Locate MinGW compiler
+        id: mingw
+        shell: pwsh
+        run: |
+          $compiler = Get-Command g++.exe -ErrorAction Stop
+          $compilerDirectory = Split-Path -Parent $compiler.Source
+          "directory=$compilerDirectory" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Configure CMake
+        shell: pwsh
+        run: >-
+          cmake
+          -S .
+          -B "build-${{ matrix.build-type }}"
+          -G Ninja
+          -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+          -DBUILD_TESTING=ON
+          -DCMAKE_C_COMPILER="${{ steps.mingw.outputs.directory }}/gcc.exe"
+          -DCMAKE_CXX_COMPILER="${{ steps.mingw.outputs.directory }}/g++.exe"
+          -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR"
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build "build-${{ matrix.build-type }}" --parallel
+
+      - name: Run tests
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: ctest --test-dir "build-${{ matrix.build-type }}" --output-on-failure --no-tests=error
