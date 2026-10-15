@@ -26,6 +26,16 @@ int SettingsService::collapseDelayMs() const
     return m_settings.value(QStringLiteral("panel/collapseDelayMs"), 700).toInt();
 }
 
+bool SettingsService::animationEnabled() const
+{
+    return m_settings.value(QStringLiteral("floatingBall/animationEnabled"), true).toBool();
+}
+
+void SettingsService::setAnimationEnabled(bool enabled)
+{
+    m_settings.setValue(QStringLiteral("floatingBall/animationEnabled"), enabled);
+}
+
 bool SettingsService::startAtLogin() const
 {
 #ifdef Q_OS_WIN

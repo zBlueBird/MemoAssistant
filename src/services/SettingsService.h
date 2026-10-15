@@ -11,6 +11,8 @@ public:
     QPoint floatingBallPosition() const;
     void setFloatingBallPosition(const QPoint &position);
     int collapseDelayMs() const;
+    bool animationEnabled() const;
+    void setAnimationEnabled(bool enabled);
     bool startAtLogin() const;
     bool setStartAtLogin(bool enabled);
 

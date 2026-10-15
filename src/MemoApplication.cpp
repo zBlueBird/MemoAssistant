@@ -67,6 +67,7 @@ bool MemoApplication::initialize()
     m_settings = std::make_unique<SettingsService>();
 
     m_floatingBall = new FloatingBall;
+    m_floatingBall->setAnimationEnabled(m_settings->animationEnabled());
     m_panel = new MemoPanel(m_repository.get());
     m_trayIcon = new QSystemTrayIcon(IconFactory::applicationIcon(), this);
     m_trayIcon->setToolTip(tr("备忘录助手"));
@@ -242,6 +243,9 @@ void MemoApplication::createTrayMenu()
     QAction *showAction = m_trayMenu->addAction(tr("显示今天的备忘录"));
     QAction *newAction = m_trayMenu->addAction(tr("新建备忘录"));
     m_trayMenu->addSeparator();
+    QAction *animationAction = m_trayMenu->addAction(tr("启用蜜蜂动画"));
+    animationAction->setCheckable(true);
+    animationAction->setChecked(m_floatingBall->animationEnabled());
     QAction *autoStartAction = m_trayMenu->addAction(tr("登录 Windows 后自动启动"));
     autoStartAction->setCheckable(true);
     autoStartAction->setChecked(m_settings->startAtLogin());
@@ -252,6 +256,10 @@ void MemoApplication::createTrayMenu()
     connect(newAction, &QAction::triggered, this, [this] {
         showPanel();
         QMetaObject::invokeMethod(m_panel, "addMemo", Qt::QueuedConnection);
+    });
+    connect(animationAction, &QAction::toggled, this, [this](bool enabled) {
+        m_floatingBall->setAnimationEnabled(enabled);
+        m_settings->setAnimationEnabled(enabled);
     });
     connect(autoStartAction, &QAction::toggled, this, [this, autoStartAction](bool enabled) {
         if (!m_settings->setStartAtLogin(enabled)) {

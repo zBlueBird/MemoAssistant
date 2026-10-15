@@ -289,22 +289,32 @@ void MemoRepositoryTests::persistSettings()
     const QString positionKey = QStringLiteral("floatingBall/position");
     const QVariant originalPosition = settings.value(positionKey);
     const bool hadOriginalPosition = settings.contains(positionKey);
+    const QString animationKey = QStringLiteral("floatingBall/animationEnabled");
+    const QVariant originalAnimation = settings.value(animationKey);
+    const bool hadOriginalAnimation = settings.contains(animationKey);
 
     const QPoint expectedPosition(321, 654);
     {
         SettingsService service;
         service.setFloatingBallPosition(expectedPosition);
+        service.setAnimationEnabled(false);
     }
     {
         SettingsService service;
         QCOMPARE(service.floatingBallPosition(), expectedPosition);
         QVERIFY(service.collapseDelayMs() > 0);
+        QVERIFY(!service.animationEnabled());
     }
 
     if (hadOriginalPosition) {
         settings.setValue(positionKey, originalPosition);
     } else {
         settings.remove(positionKey);
+    }
+    if (hadOriginalAnimation) {
+        settings.setValue(animationKey, originalAnimation);
+    } else {
+        settings.remove(animationKey);
     }
     settings.sync();
 }
