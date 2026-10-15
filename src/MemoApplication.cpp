@@ -686,12 +686,26 @@ void MemoApplication::applyStyleSheet()
         }
         QPushButton#memoEditButton,
         QPushButton#memoDeleteButton {
-            border: none;
             border-radius: 7px;
-            background: transparent;
         }
-        QPushButton#memoEditButton:hover { background: #E9EFFF; }
-        QPushButton#memoDeleteButton:hover { background: #FFECEC; }
+        QPushButton#memoEditButton {
+            background: #E8EFFF;
+            border: 1px solid #C7D5FF;
+        }
+        QPushButton#memoEditButton:hover {
+            background: #D8E4FF;
+            border-color: #9FB5F5;
+        }
+        QPushButton#memoEditButton:pressed { background: #C7D7FF; }
+        QPushButton#memoDeleteButton {
+            background: #FFE9EA;
+            border: 1px solid #FFC8CB;
+        }
+        QPushButton#memoDeleteButton:hover {
+            background: #FFDADB;
+            border-color: #F4A3A7;
+        }
+        QPushButton#memoDeleteButton:pressed { background: #FFC9CC; }
         QPushButton#addButton {
             border: none;
             border-radius: 10px;

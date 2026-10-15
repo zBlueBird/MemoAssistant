@@ -54,7 +54,6 @@ MemoItemWidget::MemoItemWidget(const Memo &memo, QWidget *parent)
     for (QPushButton *button : {editButton, deleteButton}) {
         button->setFixedSize(30, 30);
         button->setIconSize(QSize(17, 17));
-        button->setFlat(true);
     }
     editButton->setToolTip(tr("编辑"));
     deleteButton->setToolTip(tr("删除"));
