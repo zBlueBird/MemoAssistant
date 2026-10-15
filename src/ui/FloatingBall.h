@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QList>
+#include <QPixmap>
 #include <QPoint>
 #include <QTimer>
 #include <QWidget>
@@ -43,6 +45,7 @@ private:
     bool m_hovered = false;
     bool m_animationEnabled = true;
     int m_incompleteCount = 0;
-    qreal m_animationPhase = 0.0;
+    int m_animationFrame = 0;
+    QList<QPixmap> m_beeFrames;
     QTimer m_animationTimer;
 };

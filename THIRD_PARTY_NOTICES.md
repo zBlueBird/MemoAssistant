@@ -2,6 +2,17 @@
 
 MemoAssistant 的 Windows 二进制发行包使用或随附下列第三方组件。本文档仅记录第三方组件，不授予 MemoAssistant 自有源代码许可证；项目自有代码的许可状态仍需由权利人确定。
 
+## Colorful Bee animation artwork
+
+The desktop floating mascot uses selected transparent PNG animation frames from **Colorful Bee** by bevouliin.com.
+
+- Source: <https://opengameart.org/content/colorful-bee>
+- Original archive: <https://opengameart.org/sites/default/files/bee_sprites.zip>
+- License: CC0 1.0 Universal
+- Notice: `licenses/BEE-SPRITE-CC0.txt`
+
+CC0 does not require attribution, but the source and author are retained here for provenance.
+
 ## Qt 6.11.1
 
 Copyright (C) The Qt Company Ltd. and other contributors.

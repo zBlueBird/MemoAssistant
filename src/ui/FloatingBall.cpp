@@ -9,8 +9,6 @@
 #include <QScreen>
 #include <QShowEvent>
 #include <QStyleHints>
-#include <QtMath>
-#include <numbers>
 
 FloatingBall::FloatingBall(QWidget *parent)
     : QWidget(parent, Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint)
@@ -22,14 +20,25 @@ FloatingBall::FloatingBall(QWidget *parent)
     setToolTip(tr("点击查看备忘录，拖动可改变位置"));
     setCursor(Qt::PointingHandCursor);
 
+    const QStringList framePaths = {
+        QStringLiteral(":/icons/bee/skeleton-animation_00.png"),
+        QStringLiteral(":/icons/bee/skeleton-animation_02.png"),
+        QStringLiteral(":/icons/bee/skeleton-animation_04.png"),
+        QStringLiteral(":/icons/bee/skeleton-animation_06.png"),
+        QStringLiteral(":/icons/bee/skeleton-animation_08.png"),
+        QStringLiteral(":/icons/bee/skeleton-animation_10.png")
+    };
+    for (const QString &path : framePaths) {
+        m_beeFrames.append(QPixmap(path));
+    }
+
     m_animationTimer.setInterval(125);
     m_animationTimer.setTimerType(Qt::CoarseTimer);
     connect(&m_animationTimer, &QTimer::timeout, this, [this] {
-        m_animationPhase += m_hovered ? 0.9 : 0.45;
-        if (m_animationPhase >= 2.0 * std::numbers::pi) {
-            m_animationPhase -= 2.0 * std::numbers::pi;
+        if (!m_beeFrames.isEmpty()) {
+            m_animationFrame = (m_animationFrame + 1) % m_beeFrames.size();
+            update();
         }
-        update();
     });
 }
 
@@ -68,7 +77,7 @@ void FloatingBall::setAnimationEnabled(bool enabled)
     }
     m_animationEnabled = enabled;
     if (!enabled) {
-        m_animationPhase = 0.0;
+        m_animationFrame = 0;
     }
     updateAnimationTimer();
     update();
@@ -95,78 +104,15 @@ void FloatingBall::paintEvent(QPaintEvent *)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    const qreal bob = m_animationEnabled ? qSin(m_animationPhase) * 1.3 : 0.0;
-    const qreal wingPulse = m_animationEnabled
-                                ? 0.65 + 0.35 * qAbs(qSin(m_animationPhase * 2.0))
-                                : 0.8;
-
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(28, 41, 61, 30));
-    painter.drawEllipse(QRectF(15, 55, 40, 6));
+    painter.setBrush(QColor(28, 41, 61, 28));
+    painter.drawEllipse(QRectF(13, 57, 43, 5));
 
-    painter.save();
-    painter.translate(0, bob);
-
-    // A round, side-facing mascot reads better at desktop-icon scale.
-    painter.setPen(QPen(QColor(QStringLiteral("#B8DDF5")), 1.2));
-    painter.setBrush(QColor(225, 244, 255, 225));
-    painter.save();
-    painter.translate(27, 29);
-    painter.rotate(-24 - wingPulse * 14);
-    painter.drawEllipse(QRectF(-15, -11, 21, 14));
-    painter.restore();
-    painter.save();
-    painter.translate(40, 29);
-    painter.rotate(24 + wingPulse * 14);
-    painter.drawEllipse(QRectF(-6, -11, 21, 14));
-    painter.restore();
-
-    QPainterPath body;
-    body.addEllipse(QRectF(18, 24, 34, 29));
-    painter.setPen(QPen(QColor(QStringLiteral("#3E2C18")), 1.4));
-    painter.setBrush(QColor(QStringLiteral("#FFCF3F")));
-    painter.drawPath(body);
-
-    painter.save();
-    painter.setClipPath(body);
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(QStringLiteral("#3E2C18")));
-    painter.drawRect(QRectF(27, 22, 6, 34));
-    painter.drawRect(QRectF(41, 22, 6, 34));
-    painter.restore();
-
-    // Face sits on the left side; the yellow muzzle keeps it friendly.
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(QStringLiteral("#3E2C18")));
-    painter.drawEllipse(QRectF(14, 26, 22, 23));
-    painter.setBrush(QColor(QStringLiteral("#FFD95B")));
-    painter.drawEllipse(QRectF(17, 29, 16, 17));
-    painter.setBrush(QColor(QStringLiteral("#23180F")));
-    painter.drawEllipse(QRectF(19.3, 33, 2.8, 3.4));
-    painter.drawEllipse(QRectF(27.6, 33, 2.8, 3.4));
-    painter.setPen(QPen(QColor(QStringLiteral("#3E2C18")), 1.25, Qt::SolidLine, Qt::RoundCap));
-    painter.drawArc(QRectF(21, 36, 7.5, 6), 200 * 16, 140 * 16);
-
-    // Short antennae with rounded tips.
-    painter.setPen(QPen(QColor(QStringLiteral("#3E2C18")), 1.7, Qt::SolidLine, Qt::RoundCap));
-    painter.drawLine(QPointF(20, 29), QPointF(16, 20));
-    painter.drawLine(QPointF(28, 27), QPointF(31, 18));
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(QStringLiteral("#3E2C18")));
-    painter.drawEllipse(QRectF(13.5, 17.5, 5, 5));
-    painter.drawEllipse(QRectF(28.5, 15.5, 5, 5));
-
-    // A small pointed tail completes the bee silhouette.
-    QPolygonF sting;
-    sting << QPointF(51, 34) << QPointF(59, 38.5) << QPointF(51, 43);
-    painter.drawPolygon(sting);
-
-    // Tiny feet add character without cluttering the face.
-    painter.setPen(QPen(QColor(QStringLiteral("#3E2C18")), 1.6, Qt::SolidLine, Qt::RoundCap));
-    painter.drawLine(QPointF(28, 51), QPointF(25, 56));
-    painter.drawLine(QPointF(39, 52), QPointF(42, 57));
-
-    painter.restore();
+    if (!m_beeFrames.isEmpty() && !m_beeFrames.at(m_animationFrame).isNull()) {
+        const QPixmap &frame = m_beeFrames.at(m_animationFrame);
+        const QRectF targetRect(7, 6, 54, 56);
+        painter.drawPixmap(targetRect, frame, frame.rect());
+    }
 
     if (m_incompleteCount <= 0) {
         return;

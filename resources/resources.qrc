@@ -5,5 +5,11 @@
         <file>icons/chevron-left.svg</file>
         <file>icons/chevron-right.svg</file>
         <file>icons/check.svg</file>
+        <file>bee/skeleton-animation_00.png</file>
+        <file>bee/skeleton-animation_02.png</file>
+        <file>bee/skeleton-animation_04.png</file>
+        <file>bee/skeleton-animation_06.png</file>
+        <file>bee/skeleton-animation_08.png</file>
+        <file>bee/skeleton-animation_10.png</file>
     </qresource>
 </RCC>
