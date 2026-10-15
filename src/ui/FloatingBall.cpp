@@ -101,69 +101,70 @@ void FloatingBall::paintEvent(QPaintEvent *)
                                 : 0.8;
 
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(28, 41, 61, 35));
-    painter.drawEllipse(QRectF(15, 56, 40, 6));
+    painter.setBrush(QColor(28, 41, 61, 30));
+    painter.drawEllipse(QRectF(15, 55, 40, 6));
 
     painter.save();
     painter.translate(0, bob);
 
-    // Large translucent wings make the silhouette immediately recognizable.
-    painter.setPen(QPen(QColor(QStringLiteral("#B8DDF5")), 1.4));
-    painter.setBrush(QColor(225, 244, 255, 235));
+    // A round, side-facing mascot reads better at desktop-icon scale.
+    painter.setPen(QPen(QColor(QStringLiteral("#B8DDF5")), 1.2));
+    painter.setBrush(QColor(225, 244, 255, 225));
     painter.save();
-    painter.translate(26, 30);
-    painter.rotate(-27 - wingPulse * 13);
-    painter.drawEllipse(QRectF(-17, -13, 23, 15));
+    painter.translate(27, 29);
+    painter.rotate(-24 - wingPulse * 14);
+    painter.drawEllipse(QRectF(-15, -11, 21, 14));
     painter.restore();
     painter.save();
-    painter.translate(42, 30);
-    painter.rotate(27 + wingPulse * 13);
-    painter.drawEllipse(QRectF(-6, -13, 23, 15));
+    painter.translate(40, 29);
+    painter.rotate(24 + wingPulse * 14);
+    painter.drawEllipse(QRectF(-6, -11, 21, 14));
     painter.restore();
 
-    // Head, antennae and eyes separate the face from the striped abdomen.
-    painter.setPen(QPen(QColor(QStringLiteral("#3C2A17")), 1.8, Qt::SolidLine, Qt::RoundCap));
-    painter.drawLine(QPointF(28, 20), QPointF(23, 13));
-    painter.drawLine(QPointF(40, 20), QPointF(45, 13));
+    QPainterPath body;
+    body.addEllipse(QRectF(18, 24, 34, 29));
+    painter.setPen(QPen(QColor(QStringLiteral("#3E2C18")), 1.4));
+    painter.setBrush(QColor(QStringLiteral("#FFCF3F")));
+    painter.drawPath(body);
+
+    painter.save();
+    painter.setClipPath(body);
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(QStringLiteral("#3C2A17")));
-    painter.drawEllipse(QRectF(21, 10.5, 4.5, 4.5));
-    painter.drawEllipse(QRectF(42.5, 10.5, 4.5, 4.5));
+    painter.setBrush(QColor(QStringLiteral("#3E2C18")));
+    painter.drawRect(QRectF(27, 22, 6, 34));
+    painter.drawRect(QRectF(41, 22, 6, 34));
+    painter.restore();
 
-    painter.setBrush(QColor(QStringLiteral("#4B351D")));
-    painter.drawEllipse(QRectF(24, 17, 20, 19));
-    painter.setBrush(QColor(QStringLiteral("#FFD65A")));
-    painter.drawEllipse(QRectF(28, 19, 12, 11));
+    // Face sits on the left side; the yellow muzzle keeps it friendly.
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(QStringLiteral("#3E2C18")));
+    painter.drawEllipse(QRectF(14, 26, 22, 23));
+    painter.setBrush(QColor(QStringLiteral("#FFD95B")));
+    painter.drawEllipse(QRectF(17, 29, 16, 17));
     painter.setBrush(QColor(QStringLiteral("#23180F")));
-    painter.drawEllipse(QRectF(29.5, 22, 2.7, 3.2));
-    painter.drawEllipse(QRectF(35.8, 22, 2.7, 3.2));
-    painter.setPen(QPen(QColor(QStringLiteral("#3C2A17")), 1.2, Qt::SolidLine, Qt::RoundCap));
-    painter.drawArc(QRectF(31, 24, 6, 5), 200 * 16, 140 * 16);
+    painter.drawEllipse(QRectF(19.3, 33, 2.8, 3.4));
+    painter.drawEllipse(QRectF(27.6, 33, 2.8, 3.4));
+    painter.setPen(QPen(QColor(QStringLiteral("#3E2C18")), 1.25, Qt::SolidLine, Qt::RoundCap));
+    painter.drawArc(QRectF(21, 36, 7.5, 6), 200 * 16, 140 * 16);
 
-    // Teardrop abdomen with horizontal bee stripes and a visible stinger.
-    QPainterPath abdomen;
-    abdomen.moveTo(22, 31);
-    abdomen.cubicTo(22, 25, 46, 25, 46, 32);
-    abdomen.cubicTo(46, 47, 39, 56, 34, 59);
-    abdomen.cubicTo(29, 56, 22, 47, 22, 31);
-    abdomen.closeSubpath();
-    painter.setPen(QPen(QColor(QStringLiteral("#4B351D")), 1.2));
-    painter.setBrush(QColor(QStringLiteral("#FFD54A")));
-    painter.drawPath(abdomen);
-
-    painter.save();
-    painter.setClipPath(abdomen);
+    // Short antennae with rounded tips.
+    painter.setPen(QPen(QColor(QStringLiteral("#3E2C18")), 1.7, Qt::SolidLine, Qt::RoundCap));
+    painter.drawLine(QPointF(20, 29), QPointF(16, 20));
+    painter.drawLine(QPointF(28, 27), QPointF(31, 18));
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(QStringLiteral("#4B351D")));
-    painter.drawRect(QRectF(20, 34, 28, 5));
-    painter.drawRect(QRectF(20, 45, 28, 5));
-    painter.restore();
+    painter.setBrush(QColor(QStringLiteral("#3E2C18")));
+    painter.drawEllipse(QRectF(13.5, 17.5, 5, 5));
+    painter.drawEllipse(QRectF(28.5, 15.5, 5, 5));
 
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(QStringLiteral("#3C2A17")));
+    // A small pointed tail completes the bee silhouette.
     QPolygonF sting;
-    sting << QPointF(31, 57) << QPointF(34, 65) << QPointF(37, 57);
+    sting << QPointF(51, 34) << QPointF(59, 38.5) << QPointF(51, 43);
     painter.drawPolygon(sting);
+
+    // Tiny feet add character without cluttering the face.
+    painter.setPen(QPen(QColor(QStringLiteral("#3E2C18")), 1.6, Qt::SolidLine, Qt::RoundCap));
+    painter.drawLine(QPointF(28, 51), QPointF(25, 56));
+    painter.drawLine(QPointF(39, 52), QPointF(42, 57));
 
     painter.restore();
 
