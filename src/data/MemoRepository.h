@@ -19,6 +19,7 @@ public:
     bool setCompleted(qint64 id, bool completed);
     QList<Memo> scheduledOn(const QDate &date) const;
     QMap<QDate, int> taskCounts(const QDate &startDate, const QDate &endDate) const;
+    int incompleteCount() const;
     QList<Memo> dueReminders(const QDateTime &utcNow) const;
     bool markReminderSent(qint64 id);
     std::optional<Memo> findById(qint64 id) const;

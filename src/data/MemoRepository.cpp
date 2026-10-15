@@ -165,6 +165,17 @@ QMap<QDate, int> MemoRepository::taskCounts(const QDate &startDate, const QDate 
     return result;
 }
 
+int MemoRepository::incompleteCount() const
+{
+    QSqlQuery query(m_database);
+    if (!query.exec(QStringLiteral("SELECT COUNT(*) FROM memos WHERE completed = 0"))
+        || !query.next()) {
+        setError(query.lastError().text());
+        return 0;
+    }
+    return query.value(0).toInt();
+}
+
 QList<Memo> MemoRepository::dueReminders(const QDateTime &utcNow) const
 {
     QSqlQuery query(m_database);

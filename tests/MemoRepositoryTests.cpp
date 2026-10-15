@@ -24,6 +24,7 @@ private slots:
     void addAndFindMemo();
     void updateMemo();
     void completeMemo();
+    void countIncompleteMemos();
     void returnDueRemindersOnly();
     void queryScheduledDateAndCounts();
     void migrateVersionOneDatabase();
@@ -107,6 +108,27 @@ void MemoRepositoryTests::completeMemo()
     const auto reopened = m_repository->findById(*id);
     QVERIFY(!reopened->completed);
     QVERIFY(!reopened->completedAt.isValid());
+}
+
+void MemoRepositoryTests::countIncompleteMemos()
+{
+    QCOMPARE(m_repository->incompleteCount(), 0);
+
+    Memo first;
+    first.title = QStringLiteral("未完成一");
+    const auto firstId = m_repository->add(first);
+    QVERIFY(firstId.has_value());
+
+    Memo second;
+    second.title = QStringLiteral("未完成二");
+    const auto secondId = m_repository->add(second);
+    QVERIFY(secondId.has_value());
+    QCOMPARE(m_repository->incompleteCount(), 2);
+
+    QVERIFY(m_repository->setCompleted(*firstId, true));
+    QCOMPARE(m_repository->incompleteCount(), 1);
+    QVERIFY(m_repository->remove(*secondId));
+    QCOMPARE(m_repository->incompleteCount(), 0);
 }
 
 void MemoRepositoryTests::returnDueRemindersOnly()

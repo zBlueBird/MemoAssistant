@@ -85,6 +85,7 @@ bool MemoApplication::initialize()
             this, &MemoApplication::showContextMenu);
     connect(m_panel, &MemoPanel::closeRequested, this, &MemoApplication::hidePanel);
     connect(m_panel, &MemoPanel::pointerLeft, this, &MemoApplication::schedulePanelCollapse);
+    connect(m_panel, &MemoPanel::memoChanged, this, &MemoApplication::updateIncompleteBadge);
     connect(m_singleInstance.get(), &SingleInstanceGuard::activationRequested,
             this, &MemoApplication::showPanel);
     connect(m_trayIcon, &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason reason) {
@@ -103,6 +104,7 @@ bool MemoApplication::initialize()
                 showReminder(message);
             }, Qt::QueuedConnection);
 
+    updateIncompleteBadge();
     m_floatingBall->moveToVisiblePosition(m_settings->floatingBallPosition());
     m_floatingBall->show();
     m_trayIcon->show();
@@ -222,6 +224,15 @@ void MemoApplication::showReminder(const QString &message)
     m_reminderDialog->raise();
     m_reminderDialog->activateWindow();
     QApplication::alert(m_reminderDialog, 8'000);
+}
+
+void MemoApplication::updateIncompleteBadge()
+{
+    const int count = m_repository->incompleteCount();
+    m_floatingBall->setIncompleteCount(count);
+    m_trayIcon->setToolTip(count > 0
+                               ? tr("备忘录助手 · %1 条未完成").arg(count)
+                               : tr("备忘录助手 · 已全部完成"));
 }
 
 void MemoApplication::createTrayMenu()

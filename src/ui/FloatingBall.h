@@ -11,6 +11,7 @@ public:
     explicit FloatingBall(QWidget *parent = nullptr);
     void moveToVisiblePosition(const QPoint &preferredPosition);
     void snapToNearestEdge();
+    void setIncompleteCount(int count);
 
 signals:
     void clicked();
@@ -31,4 +32,5 @@ private:
     QPoint m_pressGlobalPosition;
     QPoint m_windowPositionAtPress;
     bool m_dragging = false;
+    int m_incompleteCount = 0;
 };

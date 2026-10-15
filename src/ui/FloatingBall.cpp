@@ -34,6 +34,19 @@ void FloatingBall::moveToVisiblePosition(const QPoint &preferredPosition)
     move(boundedPosition(destination, available));
 }
 
+void FloatingBall::setIncompleteCount(int count)
+{
+    const int normalizedCount = qMax(0, count);
+    if (m_incompleteCount == normalizedCount) {
+        return;
+    }
+    m_incompleteCount = normalizedCount;
+    setToolTip(m_incompleteCount > 0
+                   ? tr("%1 条未完成备忘录，点击查看").arg(m_incompleteCount)
+                   : tr("没有未完成备忘录，点击查看"));
+    update();
+}
+
 void FloatingBall::snapToNearestEdge()
 {
     const QRect available = availableGeometryForPoint(frameGeometry().center());
@@ -71,6 +84,26 @@ void FloatingBall::paintEvent(QPaintEvent *)
     painter.drawLine(QPointF(25, 25), QPointF(38, 25));
     painter.drawLine(QPointF(25, 32), QPointF(38, 32));
     painter.drawLine(QPointF(25, 39), QPointF(34, 39));
+
+    if (m_incompleteCount <= 0) {
+        return;
+    }
+
+    const QString badgeText = m_incompleteCount > 99 ? QStringLiteral("99+")
+                                                      : QString::number(m_incompleteCount);
+    const qreal badgeWidth = m_incompleteCount > 99 ? 24.0 : m_incompleteCount > 9 ? 20.0 : 17.0;
+    const QRectF badgeRect(width() - badgeWidth - 2.0, 2.0, badgeWidth, 17.0);
+    painter.setPen(QPen(Qt::white, 1.5));
+    painter.setBrush(QColor(QStringLiteral("#E5484D")));
+    painter.drawRoundedRect(badgeRect, 8.5, 8.5);
+
+    QFont badgeFont = painter.font();
+    badgeFont.setFamily(QStringLiteral("Segoe UI"));
+    badgeFont.setPixelSize(m_incompleteCount > 99 ? 9 : 10);
+    badgeFont.setBold(true);
+    painter.setFont(badgeFont);
+    painter.setPen(Qt::white);
+    painter.drawText(badgeRect, Qt::AlignCenter, badgeText);
 }
 
 void FloatingBall::mousePressEvent(QMouseEvent *event)

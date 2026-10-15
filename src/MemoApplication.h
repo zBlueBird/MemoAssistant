@@ -38,6 +38,7 @@ private:
     void positionReminder();
     void createTrayMenu();
     void showReminder(const QString &message);
+    void updateIncompleteBadge();
     void applyStyleSheet();
     bool cursorWithinAssistant() const;
 
