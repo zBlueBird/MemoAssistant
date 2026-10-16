@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName(QStringLiteral("MemoAssistant"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("local.memoassistant"));
     QCoreApplication::setApplicationName(QStringLiteral("MemoAssistant"));
-    QCoreApplication::setApplicationVersion(QStringLiteral("1.0.0"));
+    QCoreApplication::setApplicationVersion(QStringLiteral("1.1.0"));
     QApplication::setQuitOnLastWindowClosed(false);
     QApplication::setWindowIcon(IconFactory::applicationIcon());
     QLocale::setDefault(QLocale::system());

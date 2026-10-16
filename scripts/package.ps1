@@ -54,6 +54,7 @@ Copy-Item -LiteralPath $executablePath -Destination $outputPath
 
 $deployedExecutable = Join-Path $outputPath "MemoAssistant.exe"
 & $windeployqt --release --compiler-runtime --no-translations --no-opengl-sw `
+    --no-system-d3d-compiler `
     --skip-plugin-types generic,imageformats,networkinformation,styles,tls `
     $deployedExecutable
 if ($LASTEXITCODE -ne 0) { throw "windeployqt failed with exit code $LASTEXITCODE." }

@@ -66,7 +66,7 @@ Qt 项目主页及源码：
 
 ## Microsoft D3D Compiler
 
-当前 `windeployqt` 输出包含 Microsoft 的 `D3Dcompiler_47.dll`。该文件不是 Qt 或 MemoAssistant 自有代码。发布者必须确认其复制与再分发符合用于构建/部署该文件的 Microsoft SDK 或可再发行组件条款；本仓库未复制 Microsoft 许可文本，也未对其再分发权作出额外声明。
+发布脚本使用 `windeployqt --no-system-d3d-compiler`，不分发 `D3Dcompiler_47.dll`。MemoAssistant 仅支持自带该系统组件的 Windows 11，以减小便携包体积并避免额外分发 Microsoft 二进制文件。
 
 ## 发行包内容会变化
 
