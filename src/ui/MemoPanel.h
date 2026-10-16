@@ -39,7 +39,8 @@ private slots:
     void setDayView();
     void setWeekView();
     void setMonthView();
-    void selectCalendarDate(const QDate &date);
+    void selectOverviewDate(const QDate &date);
+    void openDateInDayView(const QDate &date);
     void addMemo();
     void showMemoDetails(qint64 id);
     void editMemo(qint64 id);

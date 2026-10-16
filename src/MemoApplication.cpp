@@ -552,12 +552,16 @@ void MemoApplication::applyStyleSheet()
             border-color: #9CB2EE;
         }
         QWidget#weekDayCard[today="true"] {
-            background: #F5F8FF;
-            border: 2px solid #AFC2F5;
+            background: #F3F7FF;
+            border: 2px solid #4F7CFF;
         }
         QWidget#weekDayCard[selected="true"] {
-            background: #4F7CFF;
-            border: 2px solid #4F7CFF;
+            background: #FFFFFF;
+            border: 2px solid #7899ED;
+        }
+        QWidget#weekDayCard[today="true"][selected="true"] {
+            background: #E5EDFF;
+            border: 2px solid #315FD6;
         }
         QLabel#weekCardWeekday {
             color: #7A8799;
@@ -586,14 +590,18 @@ void MemoApplication::applyStyleSheet()
             background: #E6EDFF;
             font-weight: 700;
         }
-        QWidget#weekDayCard[selected="true"] QLabel#weekCardWeekday,
-        QWidget#weekDayCard[selected="true"] QLabel#weekCardDay,
-        QWidget#weekDayCard[selected="true"] QLabel#weekCardMonth {
-            color: #FFFFFF;
+        QWidget#weekDayCard[selected="true"] QLabel#weekCardWeekday {
+            color: #586A86;
         }
-        QWidget#weekDayCard[selected="true"] QLabel#weekCardCount {
-            color: #315FD6;
-            background: #FFFFFF;
+        QWidget#weekDayCard[selected="true"] QLabel#weekCardDay {
+            color: #254FAF;
+        }
+        QWidget#weekDayCard[selected="true"] QLabel#weekCardMonth {
+            color: #71809A;
+        }
+        QWidget#weekDayCard[today="true"] QLabel#weekCardWeekday {
+            color: #254FAF;
+            font-weight: 700;
         }
         QLabel#emptyLabel {
             color: #8995A5;
@@ -894,8 +902,8 @@ void MemoApplication::applyStyleSheet()
             background-color: #FFFFFF;
             alternate-background-color: #FFFFFF;
             color: #263448;
-            selection-background-color: #4F7CFF;
-            selection-color: #FFFFFF;
+            selection-background-color: #FFFFFF;
+            selection-color: #263448;
             outline: 0;
         }
         QCalendarWidget QAbstractItemView:disabled { color: #A7B1C0; }
@@ -904,8 +912,8 @@ void MemoApplication::applyStyleSheet()
             color: #263448;
             border: 1px solid #D8E0EB;
             gridline-color: transparent;
-            selection-background-color: #4F7CFF;
-            selection-color: white;
+            selection-background-color: #FFFFFF;
+            selection-color: #263448;
         }
         QCalendarWidget QTableView QHeaderView::section {
             background: #F0F4FA;

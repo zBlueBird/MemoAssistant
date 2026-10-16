@@ -21,6 +21,9 @@ WeekOverviewWidget::WeekOverviewWidget(QWidget *parent)
         connect(card, &WeekDayCard::clicked, this, [this, index] {
             emit dateSelected(m_dates.at(index));
         });
+        connect(card, &WeekDayCard::doubleClicked, this, [this, index] {
+            emit dateActivated(m_dates.at(index));
+        });
     }
     layout->setColumnStretch(0, 1);
     layout->setColumnStretch(1, 1);
@@ -30,7 +33,7 @@ WeekOverviewWidget::WeekOverviewWidget(QWidget *parent)
 
 void WeekOverviewWidget::setWeek(const QDate &startDate,
                                  const QDate &selectedDate,
-                                 const QMap<QDate, int> &counts)
+                                 const QMap<QDate, DailyTaskSummary> &counts)
 {
     const QDate today = QDate::currentDate();
     for (int index = 0; index < m_dayCards.size(); ++index) {

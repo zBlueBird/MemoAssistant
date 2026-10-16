@@ -15,6 +15,7 @@ qt_standard_project_setup()
 
 add_library(memo_core STATIC
     src/models/Memo.h
+    src/models/DailyTaskSummary.h
     src/data/DatabaseManager.h
     src/data/DatabaseManager.cpp
     src/data/MemoRepository.h
@@ -46,6 +47,7 @@ qt_add_executable(MemoAssistant WIN32
     src/ui/MemoPanel.cpp
     src/ui/TaskCalendarWidget.h
     src/ui/TaskCalendarWidget.cpp
+    src/ui/TaskCountStyle.h
     src/ui/WeekOverviewWidget.h
     src/ui/WeekOverviewWidget.cpp
     src/ui/WeekDayCard.h

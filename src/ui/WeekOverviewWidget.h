@@ -1,5 +1,7 @@
 #pragma once
 
+#include "models/DailyTaskSummary.h"
+
 #include <QDate>
 #include <QList>
 #include <QMap>
@@ -13,10 +15,13 @@ class WeekOverviewWidget : public QWidget
 
 public:
     explicit WeekOverviewWidget(QWidget *parent = nullptr);
-    void setWeek(const QDate &startDate, const QDate &selectedDate, const QMap<QDate, int> &counts);
+    void setWeek(const QDate &startDate,
+                 const QDate &selectedDate,
+                 const QMap<QDate, DailyTaskSummary> &counts);
 
 signals:
     void dateSelected(const QDate &date);
+    void dateActivated(const QDate &date);
 
 private:
     QList<WeekDayCard *> m_dayCards;

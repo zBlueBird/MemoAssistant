@@ -1,5 +1,6 @@
 #pragma once
 
+#include "models/DailyTaskSummary.h"
 #include "models/Memo.h"
 
 #include <QList>
@@ -18,7 +19,7 @@ public:
     bool remove(qint64 id);
     bool setCompleted(qint64 id, bool completed);
     QList<Memo> scheduledOn(const QDate &date) const;
-    QMap<QDate, int> taskCounts(const QDate &startDate, const QDate &endDate) const;
+    QMap<QDate, DailyTaskSummary> taskCounts(const QDate &startDate, const QDate &endDate) const;
     int incompleteCount() const;
     QList<Memo> dueReminders(const QDateTime &utcNow) const;
     bool markReminderSent(qint64 id);

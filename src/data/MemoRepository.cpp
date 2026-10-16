@@ -142,12 +142,15 @@ QList<Memo> MemoRepository::scheduledOn(const QDate &date) const
     return result;
 }
 
-QMap<QDate, int> MemoRepository::taskCounts(const QDate &startDate, const QDate &endDate) const
+QMap<QDate, DailyTaskSummary> MemoRepository::taskCounts(const QDate &startDate,
+                                                          const QDate &endDate) const
 {
-    QMap<QDate, int> result;
+    QMap<QDate, DailyTaskSummary> result;
     QSqlQuery query(m_database);
     query.prepare(QStringLiteral(R"SQL(
-        SELECT scheduled_date, COUNT(*)
+        SELECT scheduled_date,
+               COUNT(*),
+               SUM(CASE WHEN completed = 0 THEN 1 ELSE 0 END)
         FROM memos
         WHERE scheduled_date >= :start AND scheduled_date <= :end
         GROUP BY scheduled_date
@@ -160,7 +163,7 @@ QMap<QDate, int> MemoRepository::taskCounts(const QDate &startDate, const QDate 
     }
     while (query.next()) {
         result.insert(QDate::fromString(query.value(0).toString(), Qt::ISODate),
-                      query.value(1).toInt());
+                      DailyTaskSummary{query.value(1).toInt(), query.value(2).toInt()});
     }
     return result;
 }

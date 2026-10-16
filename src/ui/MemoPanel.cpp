@@ -137,6 +137,8 @@ MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
     m_calendar->setMinimumDate(QDate(2000, 1, 1));
     m_calendar->setMaximumDate(QDate::currentDate().addYears(20));
     m_calendar->setSelectedDate(m_selectedDate);
+    m_weekOverview->setToolTip(tr("单击选择日期，双击查看当天任务"));
+    m_calendar->setToolTip(tr("单击选择日期，双击查看当天任务"));
     m_contentStack->addWidget(m_scrollArea);
     m_contentStack->addWidget(m_weekOverview);
     m_contentStack->addWidget(m_calendar);
@@ -167,8 +169,14 @@ MemoPanel::MemoPanel(MemoRepository *repository, QWidget *parent)
     connect(m_dayViewButton, &QPushButton::clicked, this, &MemoPanel::setDayView);
     connect(m_weekViewButton, &QPushButton::clicked, this, &MemoPanel::setWeekView);
     connect(m_monthViewButton, &QPushButton::clicked, this, &MemoPanel::setMonthView);
-    connect(m_weekOverview, &WeekOverviewWidget::dateSelected, this, &MemoPanel::selectCalendarDate);
-    connect(m_calendar, &QCalendarWidget::clicked, this, &MemoPanel::selectCalendarDate);
+    connect(m_weekOverview, &WeekOverviewWidget::dateSelected,
+            this, &MemoPanel::selectOverviewDate);
+    connect(m_weekOverview, &WeekOverviewWidget::dateActivated,
+            this, &MemoPanel::openDateInDayView);
+    connect(m_calendar, &QCalendarWidget::clicked,
+            this, &MemoPanel::selectOverviewDate);
+    connect(m_calendar, &QCalendarWidget::activated,
+            this, &MemoPanel::openDateInDayView);
     connect(addButton, &QPushButton::clicked, this, &MemoPanel::addMemo);
     connect(closeButton, &QPushButton::clicked, this, &MemoPanel::closeRequested);
 
@@ -256,7 +264,13 @@ void MemoPanel::setMonthView()
     setViewMode(ViewMode::Month);
 }
 
-void MemoPanel::selectCalendarDate(const QDate &date)
+void MemoPanel::selectOverviewDate(const QDate &date)
+{
+    m_selectedDate = date;
+    refresh();
+}
+
+void MemoPanel::openDateInDayView(const QDate &date)
 {
     m_selectedDate = date;
     setViewMode(ViewMode::Day);
@@ -424,7 +438,7 @@ void MemoPanel::updateCalendar()
     }
 
     const auto [start, end] = visibleRange();
-    const QMap<QDate, int> counts = m_repository->taskCounts(start, end);
+    const QMap<QDate, DailyTaskSummary> counts = m_repository->taskCounts(start, end);
     if (m_viewMode == ViewMode::Week) {
         m_weekOverview->setWeek(start, m_selectedDate, counts);
         m_contentStack->setCurrentWidget(m_weekOverview);

@@ -168,7 +168,9 @@ void MemoRepositoryTests::queryScheduledDateAndCounts()
     Memo third;
     third.title = QStringLiteral("第三项");
     third.scheduledDate = secondDate;
-    QVERIFY(m_repository->add(third).has_value());
+    const auto thirdId = m_repository->add(third);
+    QVERIFY(thirdId.has_value());
+    QVERIFY(m_repository->setCompleted(*thirdId, true));
 
     const QList<Memo> scheduled = m_repository->scheduledOn(secondDate);
     QCOMPARE(scheduled.size(), 2);
@@ -176,9 +178,11 @@ void MemoRepositoryTests::queryScheduledDateAndCounts()
         QCOMPARE(memo.scheduledDate, secondDate);
     }
 
-    const QMap<QDate, int> counts = m_repository->taskCounts(firstDate, secondDate);
-    QCOMPARE(counts.value(firstDate), 1);
-    QCOMPARE(counts.value(secondDate), 2);
+    const QMap<QDate, DailyTaskSummary> counts = m_repository->taskCounts(firstDate, secondDate);
+    QCOMPARE(counts.value(firstDate).total, 1);
+    QCOMPARE(counts.value(firstDate).incomplete, 1);
+    QCOMPARE(counts.value(secondDate).total, 2);
+    QCOMPARE(counts.value(secondDate).incomplete, 1);
 }
 
 void MemoRepositoryTests::migrateVersionOneDatabase()
