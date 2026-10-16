@@ -13,6 +13,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QCursor>
+#include <QDesktopServices>
 #include <QGuiApplication>
 #include <QMenu>
 #include <QMessageBox>
@@ -20,6 +21,7 @@
 #include <QScreen>
 #include <QSignalBlocker>
 #include <QSystemTrayIcon>
+#include <QUrl>
 
 MemoApplication::MemoApplication(QObject *parent)
     : QObject(parent)
@@ -250,6 +252,8 @@ void MemoApplication::createTrayMenu()
     autoStartAction->setCheckable(true);
     autoStartAction->setChecked(m_settings->startAtLogin());
     m_trayMenu->addSeparator();
+    QAction *githubAction = m_trayMenu->addAction(tr("GitHub 项目主页"));
+    m_trayMenu->addSeparator();
     QAction *quitAction = m_trayMenu->addAction(tr("退出"));
 
     connect(showAction, &QAction::triggered, this, &MemoApplication::showPanel);
@@ -267,6 +271,10 @@ void MemoApplication::createTrayMenu()
             autoStartAction->setChecked(!enabled);
             QMessageBox::warning(nullptr, tr("设置失败"), tr("无法修改 Windows 开机启动设置。"));
         }
+    });
+    connect(githubAction, &QAction::triggered, this, [] {
+        QDesktopServices::openUrl(
+            QUrl(QStringLiteral("https://github.com/zBlueBird/MemoAssistant")));
     });
     connect(quitAction, &QAction::triggered, this, &MemoApplication::quitApplication);
 
