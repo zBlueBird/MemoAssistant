@@ -28,6 +28,7 @@ endif()
 
 qt_add_executable(MemoAssistant WIN32
     resources/resources.qrc
+    resources/windows/MemoAssistant.rc
     src/main.cpp
     src/MemoApplication.h
     src/MemoApplication.cpp
