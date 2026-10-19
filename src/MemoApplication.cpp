@@ -868,37 +868,7 @@ void MemoApplication::applyStyleSheet()
             width: 12px;
             height: 12px;
         }
-        QCalendarWidget QWidget#qt_calendar_navigationbar {
-            background: #4F7CFF;
-            color: white;
-            min-height: 34px;
-        }
-        QCalendarWidget QToolButton {
-            background: transparent;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 5px 8px;
-            font-weight: 600;
-        }
-        QCalendarWidget QToolButton:hover { background: rgba(255, 255, 255, 45); }
-        QCalendarWidget QToolButton::menu-indicator { image: none; }
-        QCalendarWidget QToolButton#qt_calendar_prevmonth {
-            qproperty-icon: url(:/icons/icons/chevron-left.svg);
-        }
-        QCalendarWidget QToolButton#qt_calendar_nextmonth {
-            qproperty-icon: url(:/icons/icons/chevron-right.svg);
-        }
-        QCalendarWidget QSpinBox {
-            background: white;
-            color: #202938;
-            border: 1px solid #CBD4E2;
-            border-radius: 5px;
-            padding: 3px 6px;
-            selection-background-color: #4F7CFF;
-            selection-color: white;
-        }
-        QCalendarWidget QAbstractItemView:enabled {
+        QCalendarWidget#taskCalendar QAbstractItemView:enabled {
             background-color: #FFFFFF;
             alternate-background-color: #FFFFFF;
             color: #263448;
@@ -906,8 +876,8 @@ void MemoApplication::applyStyleSheet()
             selection-color: #263448;
             outline: 0;
         }
-        QCalendarWidget QAbstractItemView:disabled { color: #A7B1C0; }
-        QCalendarWidget QTableView {
+        QCalendarWidget#taskCalendar QAbstractItemView:disabled { color: #A7B1C0; }
+        QCalendarWidget#taskCalendar QTableView {
             background: #FFFFFF;
             color: #263448;
             border: 1px solid #D8E0EB;
@@ -915,16 +885,83 @@ void MemoApplication::applyStyleSheet()
             selection-background-color: #FFFFFF;
             selection-color: #263448;
         }
-        QCalendarWidget QTableView QHeaderView::section {
+        QCalendarWidget#taskCalendar QTableView QHeaderView::section {
             background: #F0F4FA;
             color: #536177;
             border: none;
             padding: 4px;
             font-weight: 600;
         }
-        QCalendarWidget QWidget {
+        QCalendarWidget#editorCalendarPopup {
+            background: #FFFFFF;
+            border: 1px solid #C7D3E4;
+            border-radius: 10px;
+        }
+        QCalendarWidget#editorCalendarPopup QWidget#qt_calendar_navigationbar {
+            background: #EEF3FF;
+            border-bottom: 1px solid #D7E2FA;
+            min-height: 42px;
+        }
+        QCalendarWidget#editorCalendarPopup QToolButton {
+            background: transparent;
+            color: #254FAF;
+            border: none;
+            border-radius: 7px;
+            min-height: 28px;
+            padding: 4px 9px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        QCalendarWidget#editorCalendarPopup QToolButton:hover {
+            background: #DCE6FF;
+        }
+        QCalendarWidget#editorCalendarPopup QToolButton:pressed {
+            background: #CBD9FF;
+        }
+        QCalendarWidget#editorCalendarPopup QToolButton::menu-indicator { image: none; }
+        QCalendarWidget#editorCalendarPopup QToolButton#qt_calendar_prevmonth {
+            qproperty-icon: url(:/icons/icons/chevron-left-blue.svg);
+        }
+        QCalendarWidget#editorCalendarPopup QToolButton#qt_calendar_nextmonth {
+            qproperty-icon: url(:/icons/icons/chevron-right-blue.svg);
+        }
+        QCalendarWidget#editorCalendarPopup QSpinBox {
+            background: #FFFFFF;
+            color: #202938;
+            border: 1px solid #B7C7DF;
+            border-radius: 6px;
+            padding: 4px 7px;
+            selection-background-color: #4F7CFF;
+            selection-color: #FFFFFF;
+        }
+        QCalendarWidget#editorCalendarPopup QAbstractItemView:enabled {
             background-color: #FFFFFF;
+            alternate-background-color: #FFFFFF;
             color: #263448;
+            selection-background-color: #4F7CFF;
+            selection-color: #FFFFFF;
+            outline: 0;
+            font-size: 13px;
+        }
+        QCalendarWidget#editorCalendarPopup QAbstractItemView:disabled {
+            color: #B2BCCB;
+        }
+        QCalendarWidget#editorCalendarPopup QTableView {
+            background: #FFFFFF;
+            color: #263448;
+            border: none;
+            gridline-color: transparent;
+            selection-background-color: #4F7CFF;
+            selection-color: #FFFFFF;
+        }
+        QCalendarWidget#editorCalendarPopup QTableView QHeaderView::section {
+            background: #F5F7FB;
+            color: #536177;
+            border: none;
+            border-bottom: 1px solid #E3E8F1;
+            padding: 6px 3px;
+            font-size: 12px;
+            font-weight: 700;
         }
         QCheckBox#editorReminderCheck {
             color: #425067;

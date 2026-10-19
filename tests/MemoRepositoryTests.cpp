@@ -3,13 +3,17 @@
 #include "services/ReminderService.h"
 #include "services/SettingsService.h"
 #include "services/SingleInstanceGuard.h"
+#include "ui/MemoEditorDialog.h"
 
+#include <QCalendarWidget>
+#include <QDateEdit>
 #include <QDateTime>
 #include <QSettings>
 #include <QSignalSpy>
 #include <QSqlQuery>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QTextCharFormat>
 #include <QTimeZone>
 #include <QUuid>
 #include <memory>
@@ -33,6 +37,7 @@ private slots:
     void triggerDueReminder();
     void persistSettings();
     void enforceSingleInstance();
+    void configureEditorCalendarPopups();
     void deleteMemo();
 
 private:
@@ -334,6 +339,31 @@ void MemoRepositoryTests::enforceSingleInstance()
     SingleInstanceGuard second(serverName);
     QVERIFY(!second.acquire());
     QTRY_COMPARE_WITH_TIMEOUT(activationSpy.count(), 1, 1'000);
+}
+
+void MemoRepositoryTests::configureEditorCalendarPopups()
+{
+    MemoEditorDialog dialog;
+    for (const QString &name : {QStringLiteral("editorScheduledDate"),
+                                QStringLiteral("editorReminderDate")}) {
+        QDateEdit *dateEdit = dialog.findChild<QDateEdit *>(name);
+        QVERIFY(dateEdit);
+        QVERIFY(dateEdit->calendarPopup());
+
+        QCalendarWidget *calendar = dateEdit->calendarWidget();
+        QVERIFY(calendar);
+        QCOMPARE(calendar->objectName(), QStringLiteral("editorCalendarPopup"));
+        QVERIFY(calendar->minimumWidth() >= 336);
+        QVERIFY(calendar->minimumHeight() >= 280);
+        QCOMPARE(calendar->firstDayOfWeek(), Qt::Monday);
+        QCOMPARE(calendar->verticalHeaderFormat(), QCalendarWidget::NoVerticalHeader);
+        QCOMPARE(calendar->weekdayTextFormat(Qt::Saturday).foreground().color(),
+                 QColor(QStringLiteral("#4F7CFF")));
+        QCOMPARE(calendar->weekdayTextFormat(Qt::Sunday).foreground().color(),
+                 QColor(QStringLiteral("#4F7CFF")));
+        QCOMPARE(calendar->dateTextFormat(QDate::currentDate()).background().color(),
+                 QColor(QStringLiteral("#E5EDFF")));
+    }
 }
 
 void MemoRepositoryTests::deleteMemo()

@@ -91,6 +91,8 @@ if(BUILD_TESTING)
         src/services/ReminderService.cpp
         src/services/SingleInstanceGuard.h
         src/services/SingleInstanceGuard.cpp
+        src/ui/MemoEditorDialog.h
+        src/ui/MemoEditorDialog.cpp
     )
     target_include_directories(MemoAssistantTests PRIVATE src)
     target_link_libraries(MemoAssistantTests PRIVATE

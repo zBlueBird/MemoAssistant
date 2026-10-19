@@ -1,5 +1,6 @@
 #include "ui/MemoEditorDialog.h"
 
+#include <QCalendarWidget>
 #include <QCheckBox>
 #include <QDateEdit>
 #include <QDialogButtonBox>
@@ -11,9 +12,34 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QTextEdit>
+#include <QTextCharFormat>
 #include <QTimeEdit>
 #include <QTimeZone>
 #include <QVBoxLayout>
+
+namespace {
+void configureCalendarPopup(QDateEdit *dateEdit)
+{
+    QCalendarWidget *calendar = dateEdit->calendarWidget();
+    calendar->setObjectName(QStringLiteral("editorCalendarPopup"));
+    calendar->setMinimumSize(336, 280);
+    calendar->setFirstDayOfWeek(Qt::Monday);
+    calendar->setGridVisible(false);
+    calendar->setVerticalHeaderFormat(QCalendarWidget::NoVerticalHeader);
+    calendar->setHorizontalHeaderFormat(QCalendarWidget::ShortDayNames);
+
+    QTextCharFormat weekendFormat;
+    weekendFormat.setForeground(QColor(QStringLiteral("#4F7CFF")));
+    calendar->setWeekdayTextFormat(Qt::Saturday, weekendFormat);
+    calendar->setWeekdayTextFormat(Qt::Sunday, weekendFormat);
+
+    QTextCharFormat todayFormat;
+    todayFormat.setBackground(QColor(QStringLiteral("#E5EDFF")));
+    todayFormat.setForeground(QColor(QStringLiteral("#254FAF")));
+    todayFormat.setFontWeight(QFont::DemiBold);
+    calendar->setDateTextFormat(QDate::currentDate(), todayFormat);
+}
+}
 
 MemoEditorDialog::MemoEditorDialog(QWidget *parent)
     : QDialog(parent),
@@ -70,6 +96,7 @@ MemoEditorDialog::MemoEditorDialog(QWidget *parent)
     m_scheduledDateEdit->setDate(QDate::currentDate());
     m_scheduledDateEdit->setMinimumDate(QDate(2000, 1, 1));
     m_scheduledDateEdit->setMaximumDate(QDate::currentDate().addYears(20));
+    configureCalendarPopup(m_scheduledDateEdit);
     m_scheduledDateEdit->setToolTip(tr("备忘录将在所选日期的日、周和月视图中显示"));
 
     m_reminderCheck->setObjectName(QStringLiteral("editorReminderCheck"));
@@ -83,6 +110,7 @@ MemoEditorDialog::MemoEditorDialog(QWidget *parent)
     m_reminderDateEdit->setMinimumWidth(154);
     m_reminderDateEdit->setDate(defaultReminder.date());
     m_reminderDateEdit->setMinimumDate(QDate::currentDate());
+    configureCalendarPopup(m_reminderDateEdit);
     m_reminderDateEdit->setEnabled(false);
 
     m_reminderTimeEdit->setDisplayFormat(QStringLiteral("HH:mm"));
